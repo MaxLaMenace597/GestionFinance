@@ -346,14 +346,14 @@
     let currentRange = 'all';
 
     async function loadAll(){
-      try{ const c = await window.storage.get('bankroll:config'); config = c ? JSON.parse(c.value) : null; }catch(e){ config = null; }
-      try{ const e = await window.storage.get('bankroll:entries'); entries = e ? JSON.parse(e.value) : []; }catch(e){ entries = []; }
-      try{ const m = await window.storage.get('bankroll:matches'); manualMatches = m ? JSON.parse(m.value) : []; }catch(e){ manualMatches = []; }
+      try{ const c = localStorage.getItem('bankroll:config'); config = c ? JSON.parse(c) : null; }catch(e){ config = null; }
+      try{ const e = localStorage.getItem('bankroll:entries'); entries = e ? JSON.parse(e) : []; }catch(e){ entries = []; }
+      try{ const m = localStorage.getItem('bankroll:matches'); manualMatches = m ? JSON.parse(m) : []; }catch(e){ manualMatches = []; }
       renderRegistre();
     }
-    async function saveConfig(){ try{ await window.storage.set('bankroll:config', JSON.stringify(config)); }catch(e){ console.error(e); } }
-    async function saveEntries(){ try{ await window.storage.set('bankroll:entries', JSON.stringify(entries)); }catch(e){ console.error(e); } }
-    async function saveManualMatches(){ try{ await window.storage.set('bankroll:matches', JSON.stringify(manualMatches)); }catch(e){ console.error(e); } }
+    async function saveConfig(){ try{ localStorage.setItem('bankroll:config', JSON.stringify(config)); }catch(e){ console.error(e); } }
+    async function saveEntries(){ try{ localStorage.setItem('bankroll:entries', JSON.stringify(entries)); }catch(e){ console.error(e); } }
+    async function saveManualMatches(){ try{ localStorage.setItem('bankroll:matches', JSON.stringify(manualMatches)); }catch(e){ console.error(e); } }
 
     function renderSetup(){
       const panel = document.getElementById('setup-panel');
