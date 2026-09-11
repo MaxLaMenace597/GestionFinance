@@ -112,7 +112,7 @@
   svg.chart.dragging{ cursor: grabbing; }
 
   /* ---------- KPI row ---------- */
-  .kpi-row{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 30px 0; }
+  .kpi-row{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0 30px 0; }
   .kpi{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
   .kpi .label{ font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
   .kpi .value{ font-family: 'IBM Plex Mono', monospace; font-size: 16.5px; }
@@ -281,6 +281,7 @@
         <div class="kpi"><div class="label">Mise de départ</div><div class="value" id="stat-depart">—</div></div>
         <div class="kpi"><div class="label">Gains cumulés</div><div class="value gain" id="stat-gains">—</div></div>
         <div class="kpi"><div class="label">Pertes cumulées</div><div class="value loss" id="stat-pertes">—</div></div>
+        <div class="kpi"><div class="label">Total retiré</div><div class="value" id="stat-retraits">—</div></div>
       </div>
 
       <section id="entry-section">
@@ -290,7 +291,7 @@
           <div class="field-row">
             <div class="field" style="max-width:150px;"><label for="entry-date">Date</label><input type="date" id="entry-date"></div>
             <div class="field" style="max-width:110px;"><label for="entry-type">Type</label>
-              <select id="entry-type"><option value="gain">Gain</option><option value="perte">Perte</option></select>
+              <select id="entry-type"><option value="gain">Gain</option><option value="perte">Perte</option><option value="retrait">Retrait</option></select>
             </div>
             <div class="field" style="max-width:130px;"><label for="entry-amount">Montant (€)</label><input type="number" id="entry-amount" min="0" step="0.01" placeholder="0.00"></div>
             <div class="field" style="min-width:200px;"><label for="entry-note">Note (optionnel)</label><input type="text" id="entry-note" placeholder="ex. double foot + tennis"></div>
@@ -447,16 +448,17 @@
   }
 
   function computeStats(){
-    const gains = entries.filter(e=>e.amount>0).reduce((s,e)=>s+e.amount,0);
-    const pertes = entries.filter(e=>e.amount<0).reduce((s,e)=>s+Math.abs(e.amount),0);
+    const gains = entries.filter(e=> e.type ? e.type==='gain' : e.amount>0).reduce((s,e)=>s+e.amount,0);
+    const pertes = entries.filter(e=> e.type ? e.type==='perte' : e.amount<0).reduce((s,e)=>s+Math.abs(e.amount),0);
+    const retraits = entries.filter(e=> e.type==='retrait').reduce((s,e)=>s+Math.abs(e.amount),0);
     const balance = config.depart + entries.reduce((s,e)=>s+e.amount,0);
-    return { gains, pertes, balance };
+    return { gains, pertes, retraits, balance };
   }
 
   function renderKPIs(){
     if(!config) return;
     document.getElementById('dashboard-wrap').style.display='block';
-    const { gains, pertes, balance } = computeStats();
+    const { gains, pertes, retraits, balance } = computeStats();
     const fig = document.getElementById('balance-figure');
     fig.textContent = fmtEUR(balance);
     fig.style.color = balance < config.depart ? 'var(--loss)' : 'var(--text)';
@@ -470,6 +472,7 @@
     document.getElementById('stat-depart').textContent = fmtEUR(config.depart);
     document.getElementById('stat-gains').textContent = fmtEUR(gains);
     document.getElementById('stat-pertes').textContent = fmtEUR(pertes);
+    document.getElementById('stat-retraits').textContent = fmtEUR(retraits);
   }
 
   function getFilteredPoints(){
@@ -524,7 +527,7 @@
   function resetZoom(){ zoomWindow = { start: 0, end: 1 }; document.getElementById('zoom-reset').style.display = 'none'; }
 
   function applyZoom(factor, centerFrac, pointCount){
-    const minRange = Math.min(1, 3 / Math.max(pointCount - 1, 1));
+    const minRange = Math.min(1, 2 / Math.max(pointCount - 1, 1));
     const range = zoomWindow.end - zoomWindow.start;
     const center = zoomWindow.start + range * centerFrac;
     let newRange = Math.max(minRange, Math.min(1, range * factor));
