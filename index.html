@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -648,8 +649,7 @@
 
   /* ================= MATCHS DU JOUR ================= */
   // Remplace cette URL par celle de ton Cloudflare Worker une fois déployé (étape 4-5 du guide).
-  // Exemple : "https://mon-suivi-worker.mon-pseudo.workers.dev"
-  const WORKER_URL = ""; // laisse vide tant que le Worker n'est pas prêt : le site utilisera les données statiques ci-dessous.
+  const WORKER_URL = "https://parisportif-api.maxence-sallepierret2.workers.dev";
 
   const SNAPSHOT_LABEL_STATIC = "Données statiques (exemple) \u2014 connecte ton Worker pour du direct";
   const SNAPSHOT_LABEL_LIVE = "Données en direct \u2014 actualisées à chaque chargement de page";
@@ -730,17 +730,47 @@
   function renderTennisList(){
     const el = document.getElementById('tennis-list');
     el.innerHTML = tennisData.map(m=>{
-      const statusBadge = m.status === 'live' ? `<span class="status-badge live">EN DIRECT</span>` : `<span class="status-badge">\u00c0 VENIR</span>`;
-      const statsRows = m.stats.map(s=>{
-        const total = s.p1 + s.p2 || 1;
-        const w1 = (s.p1/total*100).toFixed(0);
-        const w2 = (s.p2/total*100).toFixed(0);
-        return `
-          <div class="stat-compare-row">
-            <div class="stat-compare-labels"><span>${s.p1}</span><span class="stat-name">${escapeHtml(s.label)}</span><span>${s.p2}</span></div>
-            <div class="stat-compare-bar"><div class="b1" style="width:${w1}%;"></div><div class="b2" style="width:${w2}%;"></div></div>
-          </div>`;
-      }).join('');
+      const statusBadge = m.status === 'live' ? `<span class="status-badge live">EN DIRECT</span>` : `<span class="status-badge">${m.status === 'finished' ? 'TERMIN\u00c9' : '\u00c0 VENIR'}</span>`;
+
+      let detailHtml = '';
+      if(m.stats){
+        const statsRows = m.stats.map(s=>{
+          const total = s.p1 + s.p2 || 1;
+          const w1 = (s.p1/total*100).toFixed(0);
+          const w2 = (s.p2/total*100).toFixed(0);
+          return `
+            <div class="stat-compare-row">
+              <div class="stat-compare-labels"><span>${s.p1}</span><span class="stat-name">${escapeHtml(s.label)}</span><span>${s.p2}</span></div>
+              <div class="stat-compare-bar"><div class="b1" style="width:${w1}%;"></div><div class="b2" style="width:${w2}%;"></div></div>
+            </div>`;
+        }).join('');
+        detailHtml = `
+          <div class="player-legend">
+            <span><span class="dot" style="background:var(--tennis);"></span>${escapeHtml(m.p1)}</span>
+            <span><span class="dot" style="background:var(--text-faint);"></span>${escapeHtml(m.p2)}</span>
+          </div>
+          <h4>Statistiques du match \u2014 ${escapeHtml(m.statusLabel)}</h4>
+          ${statsRows}`;
+      } else if(m.scoreDetail){
+        const sd = m.scoreDetail;
+        const setsRows = (sd.sets && sd.sets.length && sd.sets[0].length) ? sd.sets[0].map((g,i)=>{
+          const g2 = sd.sets[1] ? sd.sets[1][i] : 0;
+          return `<div class="form-row"><div>Set ${i+1}</div><div style="font-family:'IBM Plex Mono', monospace;">${g}\u2013${g2}</div></div>`;
+        }).join('') : '<div class="lineups-empty">Score pas encore disponible pour ce match.</div>';
+        const rankLine = (sd.ranking1 || sd.ranking2)
+          ? `<div class="form-row"><div>Classement</div><div style="font-family:'IBM Plex Mono', monospace;">${sd.ranking1 ?? '\u2013'} vs ${sd.ranking2 ?? '\u2013'}</div></div>`
+          : '';
+        detailHtml = `
+          <div class="player-legend">
+            <span><span class="dot" style="background:var(--tennis);"></span>${escapeHtml(m.p1)}${sd.country1 ? ' (' + escapeHtml(sd.country1.toUpperCase()) + ')' : ''}</span>
+            <span><span class="dot" style="background:var(--text-faint);"></span>${escapeHtml(m.p2)}${sd.country2 ? ' (' + escapeHtml(sd.country2.toUpperCase()) + ')' : ''}</span>
+          </div>
+          <h4>Score \u2014 ${escapeHtml(sd.surface || '')}</h4>
+          ${setsRows}
+          ${rankLine}
+          <div style="font-size:11.5px; color:var(--text-faint); margin-top:8px;">Statistiques détaillées (aces, coups gagnants...) non disponibles sur le plan gratuit de l'API.</div>`;
+      }
+
       return `
       <div class="match-card" data-id="${m.id}">
         <div class="card-head">
@@ -748,17 +778,10 @@
             <div class="competition">${escapeHtml(m.competition)}</div>
             <div class="teams-line"><span class="team-name">${escapeHtml(m.p1)}</span><span class="vs">vs</span><span class="team-name">${escapeHtml(m.p2)}</span></div>
           </div>
-          <div class="side-info">${statusBadge}<div class="kickoff">${escapeHtml(m.setsLabel || '')}<span class="chevron">\u25be</span></div></div>
+          <div class="side-info">${statusBadge}<div class="kickoff">${escapeHtml(m.setsLabel || m.statusLabel || '')}<span class="chevron">\u25be</span></div></div>
         </div>
         <div class="match-detail"><div class="match-detail-inner">
-          <div class="detail-block">
-            <div class="player-legend">
-              <span><span class="dot" style="background:var(--tennis);"></span>${escapeHtml(m.p1)}</span>
-              <span><span class="dot" style="background:var(--text-faint);"></span>${escapeHtml(m.p2)}</span>
-            </div>
-            <h4>Statistiques du match \u2014 ${escapeHtml(m.statusLabel)}</h4>
-            ${statsRows}
-          </div>
+          <div class="detail-block">${detailHtml}</div>
         </div></div>
       </div>`;
     }).join('');
@@ -786,10 +809,8 @@
         fetch(WORKER_URL + '/api/football').then(r=>r.json()),
         fetch(WORKER_URL + '/api/tennis').then(r=>r.json())
       ]);
-      // Adapte ici le mapping selon la forme exacte des réponses de tes API
-      // (football-data.org renvoie { matches: [...] }, livetennisapi renvoie { matches: [...] } aussi selon leur doc).
-      if(footballRes && footballRes.matches){ mapFootballApiResponse(footballRes.matches); }
-      if(tennisRes && tennisRes.matches){ mapTennisApiResponse(tennisRes.matches); }
+      if(footballRes && Array.isArray(footballRes.matches)){ mapFootballApiResponse(footballRes.matches); }
+      if(tennisRes && Array.isArray(tennisRes.data)){ mapTennisApiResponse(tennisRes.data); }
       noteEl.textContent = SNAPSHOT_LABEL_LIVE + ' \u2014 ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       renderFootballList();
       renderTennisList();
@@ -801,14 +822,68 @@
     }
   }
 
-  // À adapter une fois que tu vois la vraie forme des données renvoyées par ton Worker.
+  // football-data.org v4 renvoie { matches: [{ competition:{name}, homeTeam:{name}, awayTeam:{name}, status, utcDate, score:{fullTime:{home,away}} }] }
   function mapFootballApiResponse(apiMatches){
-    // Exemple minimal : on ne fait rien de plus que garder les données statiques pour l'instant.
-    // Remplace footballData par un vrai mapping quand tu es prêt, ex:
-    // footballData = apiMatches.map(m => ({ id: m.id, competition: m.competition.name, home: m.homeTeam.name, ... }));
+    if(apiMatches.length === 0) return; // aucun match aujourd'hui dans les compétitions du plan gratuit : on garde les exemples statiques
+    footballData = apiMatches.slice(0, 8).map(m=>{
+      const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+      const isFinished = m.status === 'FINISHED';
+      const kickoff = new Date(m.utcDate).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      let kickoffLabel = 'Coup d\u2019envoi ' + kickoff;
+      if(isFinished){
+        kickoffLabel = 'Termin\u00e9 \u2014 ' + (m.score.fullTime.home ?? '?') + '\u2013' + (m.score.fullTime.away ?? '?');
+      } else if(isLive){
+        kickoffLabel = 'En cours \u2014 ' + (m.score.fullTime.home ?? 0) + '\u2013' + (m.score.fullTime.away ?? 0);
+      }
+      return {
+        id: 'api-' + m.id,
+        competition: m.competition ? m.competition.name : '',
+        home: m.homeTeam.name, away: m.awayTeam.name,
+        status: isLive ? 'live' : 'scheduled',
+        kickoffLabel,
+        form: { home: [], away: [] },
+        lineupsAvailable: false
+      };
+    });
   }
+
+  // livetennisapi renvoie { data: [{ id, tournament, round, status, surface, tour,
+  //   players:{p1:{name,country,ranking},p2:{...}}, score:{sets:[p1,p2], games:[[...],[...]], points:[p1,p2], server} }] }
   function mapTennisApiResponse(apiMatches){
-    // Idem côté tennis.
+    if(apiMatches.length === 0) return; // aucun match dispo à cet instant : on garde les exemples statiques
+    // priorité aux tours plus connus (grand_slam/atp/wta) avant challenger/itf, puis aux matchs en direct
+    const tourRank = { grand_slam: 0, atp: 1, wta: 1, challenger: 2, itf: 3 };
+    const sorted = [...apiMatches].sort((a,b)=>{
+      const rankA = tourRank[a.tour] ?? 4, rankB = tourRank[b.tour] ?? 4;
+      if(rankA !== rankB) return rankA - rankB;
+      if(a.status === 'live' && b.status !== 'live') return -1;
+      if(b.status === 'live' && a.status !== 'live') return 1;
+      return 0;
+    });
+    tennisData = sorted.slice(0, 6).map(m=>{
+      const p1 = m.players.p1, p2 = m.players.p2;
+      const sc = m.score || {};
+      const sets = sc.games || [];
+      const setsLabel = sets.length
+        ? sets[0].map((g,i)=> g + '\u2013' + (sets[1] ? sets[1][i] : 0)).join(', ')
+        : '';
+      let statusLabel = m.round || '';
+      if(sc.points && m.status === 'live'){
+        statusLabel = 'En cours \u2014 ' + sc.points[0] + '\u2013' + sc.points[1];
+      }
+      return {
+        id: 'api-' + m.id,
+        competition: (m.tournament || '') + (m.round ? ' \u2014 ' + m.round : ''),
+        p1: p1.name, p2: p2.name,
+        status: m.status === 'live' ? 'live' : (m.status === 'scheduled' ? 'scheduled' : 'finished'),
+        statusLabel,
+        setsLabel,
+        scoreDetail: {
+          sets: sets, server: sc.server, surface: m.surface,
+          ranking1: p1.ranking, ranking2: p2.ranking, country1: p1.country, country2: p2.country
+        }
+      };
+    });
   }
 
   tryLiveFetch();
