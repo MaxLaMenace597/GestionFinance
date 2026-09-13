@@ -112,7 +112,7 @@
   svg.chart.dragging{ cursor: grabbing; }
 
   /* ---------- KPI row ---------- */
-  .kpi-row{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0 30px 0; }
+  .kpi-row{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 16px 0 30px 0; }
   .kpi{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
   .kpi .label{ font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
   .kpi .value{ font-family: 'IBM Plex Mono', monospace; font-size: 16.5px; }
@@ -284,6 +284,7 @@
         <div class="kpi"><div class="label">Gains cumulés</div><div class="value gain" id="stat-gains">—</div></div>
         <div class="kpi"><div class="label">Pertes cumulées</div><div class="value loss" id="stat-pertes">—</div></div>
         <div class="kpi"><div class="label">Total retiré</div><div class="value" id="stat-retraits">—</div></div>
+        <div class="kpi"><div class="label">Bénéfice réel</div><div class="value" id="stat-benefice">—</div></div>
       </div>
 
       <section id="entry-section">
@@ -453,14 +454,15 @@
     const gains = entries.filter(e=> e.type ? e.type==='gain' : e.amount>0).reduce((s,e)=>s+e.amount,0);
     const pertes = entries.filter(e=> e.type ? e.type==='perte' : e.amount<0).reduce((s,e)=>s+Math.abs(e.amount),0);
     const retraits = entries.filter(e=> e.type==='retrait').reduce((s,e)=>s+Math.abs(e.amount),0);
+    const benefice = gains - pertes; // profit réel de l'activité de paris, indépendant des retraits et de la mise de départ
     const balance = config.depart + entries.reduce((s,e)=>s+e.amount,0);
-    return { gains, pertes, retraits, balance };
+    return { gains, pertes, retraits, benefice, balance };
   }
 
   function renderKPIs(){
     if(!config) return;
     document.getElementById('dashboard-wrap').style.display='block';
-    const { gains, pertes, retraits, balance } = computeStats();
+    const { gains, pertes, retraits, benefice, balance } = computeStats();
     const fig = document.getElementById('balance-figure');
     fig.textContent = fmtEUR(balance);
     fig.style.color = balance < config.depart ? 'var(--loss)' : 'var(--text)';
@@ -475,13 +477,16 @@
     document.getElementById('stat-gains').textContent = fmtEUR(gains);
     document.getElementById('stat-pertes').textContent = fmtEUR(pertes);
     document.getElementById('stat-retraits').textContent = fmtEUR(retraits);
+    const beneficeEl = document.getElementById('stat-benefice');
+    beneficeEl.textContent = (benefice>=0?'+':'') + fmtEUR(benefice);
+    beneficeEl.style.color = benefice >= 0 ? 'var(--gain)' : 'var(--loss)';
   }
 
   function getFilteredPoints(){
     const sorted = [...entries].sort((a,b)=> a.date.localeCompare(b.date));
     let running = config.depart;
-    let points = [{ date: null, val: running, isStart: true }];
-    sorted.forEach(e=>{ running += e.amount; points.push({ date: e.date, val: running, isStart:false }); });
+    let points = [{ date: null, val: running, isStart: true, type: null }];
+    sorted.forEach(e=>{ running += e.amount; points.push({ date: e.date, val: running, isStart:false, type: e.type || (e.amount>=0?'gain':'perte') }); });
 
     if(currentRange === 'all' || points.length <= 1) return points;
 
@@ -589,7 +594,8 @@
     for(let i=1;i<coords.length;i++){
       const a = coords[i-1], b = coords[i];
       const up = b.val >= a.val;
-      segPaths += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)}" fill="none" stroke="${up?'#34d399':'#f87171'}" stroke-width="2.5" stroke-linecap="round"/>`;
+      const segColor = b.type === 'retrait' ? '#22d3ee' : (up ? '#34d399' : '#f87171');
+      segPaths += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)}" fill="none" stroke="${segColor}" stroke-width="2.5" stroke-linecap="round"/>`;
     }
 
     const areaPath = `M${coords[0].x.toFixed(1)},${coords[0].y.toFixed(1)} ` +
@@ -620,7 +626,7 @@
       <path d="${areaPath}" fill="url(#areaGrad)" stroke="none"/>
       ${segPaths}
       ${coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="10" fill="transparent" class="hit" data-x="${c.x}" data-y="${c.y}" data-val="${c.val}" data-date="${c.date||''}"/>`).join('')}
-      <circle cx="${coords[coords.length-1].x.toFixed(1)}" cy="${coords[coords.length-1].y.toFixed(1)}" r="4" fill="${mainColor}"/>
+      <circle cx="${coords[coords.length-1].x.toFixed(1)}" cy="${coords[coords.length-1].y.toFixed(1)}" r="4" fill="${coords[coords.length-1].type === 'retrait' ? '#22d3ee' : mainColor}"/>
     `;
     wrap.insertBefore(svg, tooltip);
     wireZoomPan(svg, wrap, allPoints.length);
