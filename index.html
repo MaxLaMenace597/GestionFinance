@@ -160,6 +160,7 @@
   }
   .ledger-dot.gain{ background: rgba(52,211,153,0.14); color: var(--gain); }
   .ledger-dot.loss{ background: rgba(248,113,113,0.14); color: var(--loss); }
+  .ledger-dot.retrait{ background: rgba(34,211,238,0.14); color: var(--accent); }
   .ledger-main{ flex: 1; min-width: 0; }
   .ledger-main .note{ font-size: 13.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ledger-main .date{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
@@ -167,6 +168,7 @@
   .ledger-side .amount{ font-family: 'IBM Plex Mono', monospace; font-size: 14px; }
   .ledger-side .amount.gain{ color: var(--gain); }
   .ledger-side .amount.loss{ color: var(--loss); }
+  .ledger-side .amount.retrait{ color: var(--accent); }
   .ledger-side .running{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); margin-top: 2px; }
   .ledger-del{ background:none; border:none; color: var(--text-faint); cursor:pointer; font-size:14px; padding: 4px; flex-shrink: 0; }
   .ledger-del:hover{ color: var(--loss); }
@@ -735,17 +737,23 @@
     chronoAsc.forEach(e=>{ r += e.amount; balances[e.id] = r; });
 
     rows.innerHTML = sorted.map(e=>{
-      const isGain = e.amount >= 0;
+      const kind = e.type || (e.amount >= 0 ? 'gain' : 'perte'); // rétro-compatibilité avec les anciennes entrées sans type
+      const isGain = kind === 'gain';
+      const isRetrait = kind === 'retrait';
+      const dotClass = isGain ? 'gain' : (isRetrait ? 'retrait' : 'loss');
+      const amountClass = isGain ? 'gain' : (isRetrait ? 'retrait' : 'loss');
+      const icon = isGain ? '\u25b2' : (isRetrait ? '\u2193' : '\u25bc');
+      const defaultNote = isGain ? 'Gain du jour' : (isRetrait ? 'Retrait' : 'Perte du jour');
       const dateFmt = new Date(e.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
       return `
         <div class="ledger-item">
-          <div class="ledger-dot ${isGain?'gain':'loss'}">${isGain?'\u25b2':'\u25bc'}</div>
+          <div class="ledger-dot ${dotClass}">${icon}</div>
           <div class="ledger-main">
-            <div class="note">${e.note ? escapeHtml(e.note) : (isGain?'Gain du jour':'Perte du jour')}</div>
+            <div class="note">${e.note ? escapeHtml(e.note) : defaultNote}</div>
             <div class="date">${dateFmt}</div>
           </div>
           <div class="ledger-side">
-            <div class="amount ${isGain?'gain':'loss'}">${isGain?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+            <div class="amount ${amountClass}">${isGain?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
             <div class="running">${fmtEUR(balances[e.id])}</div>
           </div>
           <button class="ledger-del" data-id="${e.id}" title="Supprimer" aria-label="Supprimer ce mouvement">\u2715</button>
@@ -767,38 +775,84 @@
       list.innerHTML = `<div class="empty-state">Aucun match dans le carnet pour le moment.</div>`;
       return;
     }
-    const sorted = [...manualMatches].sort((a,b)=> b.id - a.id);
-    const totalMise = manualMatches.reduce((s,m)=>s+m.mise,0);
-    const totalPotentiel = manualMatches.reduce((s,m)=>s+(m.mise*m.cote - m.mise),0);
+    const pending = manualMatches.filter(m => !m.status || m.status === 'pending');
+    const totalMise = pending.reduce((s,m)=>s+m.mise,0);
+    const totalPotentiel = pending.reduce((s,m)=>s+(m.mise*m.cote - m.mise),0);
     const summaryHtml = `
       <div class="kpi-row" style="grid-template-columns:1fr 1fr; margin-bottom:16px;">
-        <div class="kpi"><div class="label">Total misé dans le carnet</div><div class="value">${fmtEUR(totalMise)}</div></div>
-        <div class="kpi"><div class="label">Gain potentiel cumulé</div><div class="value gain">+${fmtEUR(totalPotentiel)}</div></div>
+        <div class="kpi"><div class="label">Total misé (en attente)</div><div class="value">${fmtEUR(totalMise)}</div></div>
+        <div class="kpi"><div class="label">Gain potentiel (en attente)</div><div class="value gain">+${fmtEUR(totalPotentiel)}</div></div>
       </div>`;
+    const sorted = [...manualMatches].sort((a,b)=>{
+      const aPending = (!a.status || a.status==='pending') ? 0 : 1;
+      const bPending = (!b.status || b.status==='pending') ? 0 : 1;
+      if(aPending !== bPending) return aPending - bPending;
+      return b.id - a.id;
+    });
     list.innerHTML = summaryHtml + sorted.map(m=>{
       const implied = (1 / m.cote * 100);
       const potentialGain = m.mise * m.cote - m.mise;
+      const status = m.status || 'pending';
+      let statusBadgeHtml = '';
+      let actionsHtml = '';
+      if(status === 'pending'){
+        statusBadgeHtml = `<span style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--text-faint); border:1px solid var(--border); border-radius:20px; padding:2px 8px;">EN ATTENTE</span>`;
+        actionsHtml = `
+          <div class="field-row" style="margin-top:12px; justify-content:flex-end; gap:8px;">
+            <button class="ghost small" data-action="won" data-id="${m.id}" style="color:var(--gain); border-color: rgba(52,211,153,0.4);">✓ Gagné</button>
+            <button class="ghost small" data-action="lost" data-id="${m.id}" style="color:var(--loss); border-color: rgba(248,113,113,0.4);">✕ Perdu</button>
+          </div>`;
+      } else if(status === 'won'){
+        statusBadgeHtml = `<span style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--gain); border:1px solid rgba(52,211,153,0.4); border-radius:20px; padding:2px 8px;">GAGNÉ · +${fmtEUR(potentialGain)}</span>`;
+      } else if(status === 'lost'){
+        statusBadgeHtml = `<span style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--loss); border:1px solid rgba(248,113,113,0.4); border-radius:20px; padding:2px 8px;">PERDU · \u2212${fmtEUR(m.mise)}</span>`;
+      }
       return `
-        <div class="panel" style="margin-bottom:10px;">
-          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <div class="panel" style="margin-bottom:10px; ${status!=='pending' ? 'opacity:0.75;' : ''}">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;">
             <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--text-faint);">${escapeHtml(m.sport).toUpperCase()}</span>
-            <button class="danger-ghost small" data-id="${m.id}">Retirer</button>
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${statusBadgeHtml}
+              <button class="danger-ghost small" data-action="delete" data-id="${m.id}">Retirer</button>
+            </div>
           </div>
           <div style="font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px; margin:4px 0 10px 0;">${escapeHtml(m.teams)}</div>
           <div class="kpi-row" style="margin:0; grid-template-columns:1fr 1fr;">
             <div class="kpi" style="padding:10px 12px;"><div class="label">Cote</div><div class="value">${m.cote.toFixed(2)}</div></div>
             <div class="kpi" style="padding:10px 12px;"><div class="label">Probabilité implicite</div><div class="value">${implied.toFixed(1)} %</div></div>
-            <div class="kpi" style="padding:10px 12px;"><div class="label">Mise envisagée</div><div class="value">${fmtEUR(m.mise)}</div></div>
+            <div class="kpi" style="padding:10px 12px;"><div class="label">Mise engagée</div><div class="value">${fmtEUR(m.mise)}</div></div>
             <div class="kpi" style="padding:10px 12px;"><div class="label">Gain potentiel</div><div class="value gain">+${fmtEUR(potentialGain)}</div></div>
           </div>
           ${m.note ? `<div style="margin-top:10px; font-size:13px; color:var(--text-dim);">${escapeHtml(m.note)}</div>` : ''}
+          ${actionsHtml}
         </div>`;
     }).join('');
-    list.querySelectorAll('.danger-ghost').forEach(btn=>{
+
+    list.querySelectorAll('[data-action="delete"]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         manualMatches = manualMatches.filter(m=>m.id !== parseFloat(btn.dataset.id));
         await saveManualMatches();
         renderManualMatches();
+      });
+    });
+
+    list.querySelectorAll('[data-action="won"], [data-action="lost"]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = parseFloat(btn.dataset.id);
+        const ticket = manualMatches.find(m=>m.id === id);
+        if(!ticket) return;
+        const won = btn.dataset.action === 'won';
+        ticket.status = won ? 'won' : 'lost';
+        const today = new Date().toISOString().slice(0,10);
+        if(won){
+          const netProfit = ticket.mise * ticket.cote - ticket.mise;
+          entries.push({ id: Date.now(), date: today, amount: netProfit, type: 'gain', note: `Pari gagné \u2014 ${ticket.teams}` });
+        } else {
+          entries.push({ id: Date.now(), date: today, amount: -ticket.mise, type: 'perte', note: `Pari perdu \u2014 ${ticket.teams}` });
+        }
+        await saveManualMatches();
+        await saveEntries();
+        renderRegistre();
       });
     });
   }
@@ -817,8 +871,8 @@
     const date = dateEl.value || new Date().toISOString().slice(0,10);
     const rawAmount = parseFloat(amountEl.value);
     if(isNaN(rawAmount) || rawAmount <= 0){ amountEl.focus(); return; }
-    const amount = typeEl.value === 'perte' ? -rawAmount : rawAmount;
-    entries.push({ id: Date.now(), date, amount, note: noteEl.value.trim() });
+    const amount = typeEl.value === 'gain' ? rawAmount : -rawAmount;
+    entries.push({ id: Date.now(), date, amount, type: typeEl.value, note: noteEl.value.trim() });
     await saveEntries();
     amountEl.value=''; noteEl.value='';
     renderRegistre();
@@ -835,7 +889,7 @@
     const mise = parseFloat(miseEl.value) || 0;
     if(!teams){ teamsEl.focus(); return; }
     if(isNaN(cote) || cote <= 1){ coteEl.focus(); return; }
-    manualMatches.push({ id: Date.now(), sport, teams, cote, mise, note: noteEl.value.trim() });
+    manualMatches.push({ id: Date.now(), sport, teams, cote, mise, note: noteEl.value.trim(), status: 'pending' });
     await saveManualMatches();
     teamsEl.value=''; coteEl.value=''; miseEl.value=''; noteEl.value='';
     renderManualMatches();
