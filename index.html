@@ -149,6 +149,8 @@
 
   /* ---------- Ledger (feed style) ---------- */
   .ledger-list{ margin-top: 4px; }
+  .ledger-entry{ border-bottom: 1px solid var(--border); }
+  .ledger-entry:last-child{ border-bottom: none; }
   .ledger-item{
     display: flex; align-items: center; gap: 12px; padding: 12px 4px;
     border-bottom: 1px solid var(--border);
@@ -235,27 +237,31 @@
   .history-item.open .h-chevron{ transform: rotate(180deg); }
   .history-desc{ max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 1px solid var(--border); }
   .history-item.open .history-desc{ max-height: 400px; }
+  .ledger-entry.open .history-desc{ max-height: 400px; }
   .history-desc-inner{ padding: 12px 14px; font-size: 13px; color: var(--text-dim); }
 
   /* ---------- Calendrier ---------- */
-  .cal-grid{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .cal-weekday{ font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-faint); text-align: center; padding-bottom: 4px; }
+  .cal-grid{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-weekday{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); text-align: center; padding-bottom: 6px; letter-spacing: 0.03em; }
   .cal-day{
-    aspect-ratio: 1; border-radius: 6px; padding: 4px; display: flex; flex-direction: column;
-    justify-content: space-between; cursor: pointer; border: 1px solid transparent; font-size: 10px;
+    min-height: 68px; border-radius: 10px; padding: 8px 6px; display: flex; flex-direction: column;
+    justify-content: space-between; cursor: pointer; border: 1px solid var(--border); transition: transform 0.1s ease, border-color 0.15s ease;
     background: var(--surface-2);
   }
-  .cal-day.empty{ background: none; cursor: default; }
-  .cal-day .d-num{ font-family: 'IBM Plex Mono', monospace; color: var(--text-faint); font-size: 10px; }
-  .cal-day .d-amt{ font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 600; text-align: right; }
-  .cal-day.pos{ background: rgba(52,211,153,0.12); }
+  .cal-day:not(.empty):hover{ transform: translateY(-2px); border-color: var(--text-faint); }
+  .cal-day.empty{ background: none; border-color: transparent; cursor: default; }
+  .cal-day .d-num{ font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--text-dim); font-size: 14px; }
+  .cal-day .d-amt{ font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 700; text-align: right; }
+  .cal-day.pos{ background: rgba(52,211,153,0.16); border-color: rgba(52,211,153,0.3); }
+  .cal-day.pos .d-num{ color: var(--text); }
   .cal-day.pos .d-amt{ color: var(--gain); }
-  .cal-day.neg{ background: rgba(248,113,113,0.12); }
+  .cal-day.neg{ background: rgba(248,113,113,0.16); border-color: rgba(248,113,113,0.3); }
+  .cal-day.neg .d-num{ color: var(--text); }
   .cal-day.neg .d-amt{ color: var(--loss); }
-  .cal-day.selected{ border-color: var(--accent); }
+  .cal-day.selected{ border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .cal-day.today .d-num{ color: var(--accent); }
-  .cal-detail{ margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
-  .cal-detail-row{ display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+  .cal-detail{ margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
+  .cal-detail-title{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 12px; text-transform: capitalize; }
 
   footer{ text-align: center; color: var(--text-faint); font-size: 11.5px; margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border); }
 
@@ -277,6 +283,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="registre">Registre</button>
     <button class="tab-btn" data-tab="matchs">Matchs du jour</button>
+    <button class="tab-btn" data-tab="carnet">Carnet</button>
     <button class="tab-btn" data-tab="historique">Historique</button>
     <button class="tab-btn" data-tab="calendrier">Calendrier</button>
   </div>
@@ -344,37 +351,40 @@
 
         <div class="ledger-list" id="ledger-rows" style="margin-top:6px;"></div>
       </section>
-
-      <section id="carnet-section">
-        <h2>Mon carnet perso</h2>
-        <div class="section-note">Les cotes que tu notes toi-même : match, cote proposée, mise envisagée, ton analyse. Rien n'est généré automatiquement ici.</div>
-        <div class="panel">
-          <div class="field-row">
-            <div class="field" style="max-width:110px;"><label for="match-sport">Sport</label>
-              <select id="match-sport"><option value="Football">Football</option><option value="Tennis">Tennis</option><option value="Autre">Autre</option></select>
-            </div>
-            <div class="field" style="max-width:100px;"><label for="match-cote">Cote finale</label><input type="number" id="match-cote" min="1.01" step="0.01" placeholder="1.85"></div>
-            <div class="field" style="max-width:110px;"><label for="match-mise">Mise envisagée (€)</label><input type="number" id="match-mise" min="0" step="0.5" placeholder="10"></div>
-          </div>
-          <div class="field-row" style="margin-top:10px; align-items:flex-start;">
-            <div class="field" style="flex:1;">
-              <label>Match(s) — ajoute-en plusieurs pour un combiné</label>
-              <div id="match-teams-list" style="display:flex; flex-direction:column; gap:8px;">
-                <div class="field-row" style="gap:6px;">
-                  <input type="text" class="match-team-input" placeholder="ex. PSG — OM" style="flex:1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
-                </div>
-              </div>
-              <button type="button" class="ghost small" id="add-match-row-btn" style="margin-top:8px;">+ Ajouter un match</button>
-            </div>
-          </div>
-          <div class="field-row" style="margin-top:12px;">
-            <div class="field"><label for="match-note">Ton analyse</label><textarea id="match-note" placeholder="forme récente, absences, ton raisonnement..."></textarea></div>
-          </div>
-          <div class="field-row" style="margin-top:12px; justify-content:flex-end;"><button id="add-match-btn">Ajouter au carnet</button></div>
-        </div>
-        <div id="match-list" style="margin-top:14px;"></div>
-      </section>
     </div>
+  </div>
+
+  <!-- ============ VIEW: CARNET ============ -->
+  <div class="view" id="view-carnet">
+    <section style="margin-top:20px;">
+      <h2>Mon carnet perso</h2>
+      <div class="section-note">Les cotes que tu notes toi-même : match, cote proposée, mise envisagée, ton analyse. Rien n'est généré automatiquement ici.</div>
+      <div class="panel">
+        <div class="field-row">
+          <div class="field" style="max-width:110px;"><label for="match-sport">Sport</label>
+            <select id="match-sport"><option value="Football">Football</option><option value="Tennis">Tennis</option><option value="Autre">Autre</option></select>
+          </div>
+          <div class="field" style="max-width:100px;"><label for="match-cote">Cote finale</label><input type="number" id="match-cote" min="1.01" step="0.01" placeholder="1.85"></div>
+          <div class="field" style="max-width:110px;"><label for="match-mise">Mise envisagée (€)</label><input type="number" id="match-mise" min="0" step="0.5" placeholder="10"></div>
+        </div>
+        <div class="field-row" style="margin-top:10px; align-items:flex-start;">
+          <div class="field" style="flex:1;">
+            <label>Match(s) — ajoute-en plusieurs pour un combiné</label>
+            <div id="match-teams-list" style="display:flex; flex-direction:column; gap:8px;">
+              <div class="field-row" style="gap:6px;">
+                <input type="text" class="match-team-input" placeholder="ex. PSG — OM" style="flex:1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
+              </div>
+            </div>
+            <button type="button" class="ghost small" id="add-match-row-btn" style="margin-top:8px;">+ Ajouter un match</button>
+          </div>
+        </div>
+        <div class="field-row" style="margin-top:12px;">
+          <div class="field"><label for="match-note">Ton analyse</label><textarea id="match-note" placeholder="forme récente, absences, ton raisonnement..."></textarea></div>
+        </div>
+        <div class="field-row" style="margin-top:12px; justify-content:flex-end;"><button id="add-match-btn">Ajouter au carnet</button></div>
+      </div>
+      <div id="match-list" style="margin-top:14px;"></div>
+    </section>
   </div>
 
   <!-- ============ VIEW: MATCHS ============ -->
@@ -835,19 +845,29 @@
       const defaultNote = isGain ? 'Gain du jour' : (isRetrait ? 'Retrait' : (isEngage ? 'Mise engagée' : 'Perte du jour'));
       const dateFmt = new Date(e.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
       return `
-        <div class="ledger-item">
-          <div class="ledger-dot ${dotClass}">${icon}</div>
-          <div class="ledger-main">
-            <div class="note">${e.note ? escapeHtml(e.note) : defaultNote}</div>
-            <div class="date">${dateFmt}</div>
+        <div class="ledger-entry" data-id="${e.id}">
+          <div class="ledger-item" style="cursor:pointer; border-bottom:none;">
+            <div class="ledger-dot ${dotClass}">${icon}</div>
+            <div class="ledger-main">
+              <div class="note">${e.note ? escapeHtml(e.note) : defaultNote}</div>
+              <div class="date">${dateFmt}</div>
+            </div>
+            <div class="ledger-side">
+              <div class="amount ${amountClass}">${isGain?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+              <div class="running">${fmtEUR(balances[e.id])}</div>
+            </div>
+            <button class="ledger-del" data-id="${e.id}" title="Supprimer" aria-label="Supprimer ce mouvement">\u2715</button>
           </div>
-          <div class="ledger-side">
-            <div class="amount ${amountClass}">${isGain?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-            <div class="running">${fmtEUR(balances[e.id])}</div>
-          </div>
-          <button class="ledger-del" data-id="${e.id}" title="Supprimer" aria-label="Supprimer ce mouvement">\u2715</button>
+          <div class="history-desc"><div class="history-desc-inner">${e.description ? escapeHtml(e.description) : 'Aucune description ajoutée pour ce mouvement.'}</div></div>
         </div>`;
     }).join('');
+
+    rows.querySelectorAll('.ledger-entry').forEach(entryEl=>{
+      entryEl.querySelector('.ledger-item').addEventListener('click', (ev)=>{
+        if(ev.target.closest('.ledger-del')) return;
+        entryEl.classList.toggle('open');
+      });
+    });
 
     rows.querySelectorAll('.ledger-del').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
@@ -947,6 +967,7 @@
         const won = btn.dataset.action === 'won';
         ticket.status = won ? 'won' : 'lost';
         const today = new Date().toISOString().slice(0,10);
+        ticket.resolvedDate = today;
         const matchesList = ticket.matches && ticket.matches.length ? ticket.matches : (ticket.teams ? [ticket.teams] : []);
         const label = matchesList.length > 1 ? `Combiné (${matchesList.length} matchs) \u2014 ${matchesList.join(' + ')}` : matchesList[0];
         // On retire l'entrée "mise engagée" temporaire et on la remplace par le résultat définitif
@@ -955,9 +976,9 @@
         }
         if(won){
           const netProfit = ticket.mise * ticket.cote - ticket.mise;
-          entries.push({ id: Date.now(), date: today, amount: netProfit, type: 'gain', note: `Pari gagné \u2014 ${label}` });
+          entries.push({ id: Date.now(), date: today, amount: netProfit, type: 'gain', note: `Pari gagné \u2014 ${label}`, fromTicketId: ticket.id });
         } else {
-          entries.push({ id: Date.now(), date: today, amount: -ticket.mise, type: 'perte', note: `Pari perdu \u2014 ${label}` });
+          entries.push({ id: Date.now(), date: today, amount: -ticket.mise, type: 'perte', note: `Pari perdu \u2014 ${label}`, fromTicketId: ticket.id });
         }
         await saveManualMatches();
         await saveEntries();
@@ -1077,19 +1098,69 @@
     const detail = document.getElementById('cal-detail');
     if(!detail) return;
     if(!calSelectedDate){ detail.style.display = 'none'; return; }
-    const dayEntries = entries.filter(e => e.date === calSelectedDate);
+
     const dateFmt = new Date(calSelectedDate+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
-    if(dayEntries.length === 0){
-      detail.innerHTML = `<div class="section-note" style="margin:0;">Aucun mouvement le ${dateFmt}.</div>`;
-    } else {
-      detail.innerHTML = `<div style="font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:14px; margin-bottom:8px;">${dateFmt}</div>` +
-        dayEntries.map(e=>{
-          const kind = e.type || (e.amount>=0?'gain':'perte');
-          const cls = kind === 'gain' ? 'gain' : (kind === 'retrait' ? 'retrait' : (kind === 'engage' ? 'engage' : 'loss'));
-          const title = e.note || (kind==='gain'?'Gain':(kind==='perte'?'Perte':(kind==='retrait'?'Retrait':'Mise engagée')));
-          return `<div class="cal-detail-row"><span>${escapeHtml(title)}</span><span class="amount ${cls}" style="font-family:'IBM Plex Mono', monospace;">${e.amount>=0?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>`;
-        }).join('');
+
+    // Tickets résolus ce jour-là (via resolvedDate), et tickets encore en attente créés ce jour-là
+    const resolvedTickets = manualMatches.filter(m => m.resolvedDate === calSelectedDate);
+    const pendingTickets = manualMatches.filter(m => (!m.status || m.status==='pending') && m.createdDate === calSelectedDate);
+    const ticketCards = [...resolvedTickets, ...pendingTickets];
+
+    // Mouvements du jour qui ne viennent pas d'un ticket (gain/perte manuels, retraits) — on exclut les "engagé" car déjà représentés par les tickets en attente
+    const plainEntries = entries.filter(e => e.date === calSelectedDate && !e.fromTicketId && e.type !== 'engage');
+
+    if(ticketCards.length === 0 && plainEntries.length === 0){
+      detail.innerHTML = `<div class="cal-detail-title">${dateFmt}</div><div class="empty-state" style="padding:0;">Aucun mouvement ni pari ce jour-là.</div>`;
+      detail.style.display = 'block';
+      return;
     }
+
+    const ticketCardsHtml = ticketCards.map(m=>{
+      const matchesList = m.matches && m.matches.length ? m.matches : (m.teams ? [m.teams] : []);
+      const isCombo = matchesList.length > 1;
+      const potentialGain = m.mise * m.cote - m.mise;
+      const status = m.status || 'pending';
+      let badge = '';
+      if(status === 'pending') badge = `<span class="status-badge">EN ATTENTE</span>`;
+      else if(status === 'won') badge = `<span class="status-badge live" style="color:var(--gain); border-color:rgba(52,211,153,0.4);">GAGNÉ · +${fmtEUR(potentialGain)}</span>`;
+      else badge = `<span class="status-badge live">PERDU · \u2212${fmtEUR(m.mise)}</span>`;
+      const titleLine = isCombo
+        ? matchesList.map(t=>`<div style="font-size:13.5px;">${escapeHtml(t)}</div>`).join('')
+        : `<div style="font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px;">${escapeHtml(matchesList[0] || '')}</div>`;
+      return `
+        <div class="match-card" style="cursor:default;">
+          <div class="card-head" style="cursor:default; flex-direction:column; align-items:stretch; gap:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="competition">${escapeHtml(m.sport).toUpperCase()}${isCombo ? ` · COMBIN\u00c9 (${matchesList.length})` : ''}</span>
+              ${badge}
+            </div>
+            <div>${titleLine}</div>
+            <div class="team-stats-grid">
+              <div class="tsg-item"><span>Cote</span><span class="v">${m.cote.toFixed(2)}</span></div>
+              <div class="tsg-item"><span>Mise</span><span class="v">${fmtEUR(m.mise)}</span></div>
+            </div>
+            ${m.note ? `<div style="font-size:12.5px; color:var(--text-dim);">${escapeHtml(m.note)}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    const plainEntriesHtml = plainEntries.map(e=>{
+      const kind = e.type || (e.amount>=0?'gain':'perte');
+      const cls = kind === 'gain' ? 'gain' : (kind === 'retrait' ? 'retrait' : 'loss');
+      const title = e.note || (kind==='gain'?'Gain':(kind==='perte'?'Perte':'Retrait'));
+      return `
+        <div class="ledger-item">
+          <div class="ledger-dot ${cls}">${kind==='gain'?'\u25b2':(kind==='retrait'?'\u2193':'\u25bc')}</div>
+          <div class="ledger-main"><div class="note">${escapeHtml(title)}</div>${e.description ? `<div class="date" style="white-space:normal;">${escapeHtml(e.description)}</div>` : ''}</div>
+          <div class="ledger-side"><div class="amount ${cls}">${e.amount>=0?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+        </div>`;
+    }).join('');
+
+    detail.innerHTML = `
+      <div class="cal-detail-title">${dateFmt}</div>
+      ${ticketCardsHtml}
+      ${plainEntriesHtml ? `<div class="ledger-list" style="margin-top:${ticketCardsHtml ? '10px' : '0'};">${plainEntriesHtml}</div>` : ''}
+    `;
     detail.style.display = 'block';
   }
 
@@ -1137,7 +1208,7 @@
     if(isNaN(cote) || cote <= 1){ coteEl.focus(); return; }
     const label = matches.length > 1 ? `Combiné (${matches.length} matchs) \u2014 ${matches.join(' + ')}` : matches[0];
     const pendingEntryId = Date.now();
-    manualMatches.push({ id: Date.now() + 1, sport, matches, cote, mise, note: noteEl.value.trim(), status: 'pending', pendingEntryId });
+    manualMatches.push({ id: Date.now() + 1, sport, matches, cote, mise, note: noteEl.value.trim(), status: 'pending', pendingEntryId, createdDate: new Date().toISOString().slice(0,10) });
     // La mise se déduit tout de suite du solde/graphique pour montrer l'argent engagé, en attente du résultat.
     entries.push({ id: pendingEntryId, date: new Date().toISOString().slice(0,10), amount: -mise, type: 'engage', note: `Mise engagée \u2014 ${label}` });
     await saveManualMatches();
