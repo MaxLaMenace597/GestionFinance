@@ -237,6 +237,26 @@
   .history-item.open .history-desc{ max-height: 400px; }
   .history-desc-inner{ padding: 12px 14px; font-size: 13px; color: var(--text-dim); }
 
+  /* ---------- Calendrier ---------- */
+  .cal-grid{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-weekday{ font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-faint); text-align: center; padding-bottom: 4px; }
+  .cal-day{
+    aspect-ratio: 1; border-radius: 6px; padding: 4px; display: flex; flex-direction: column;
+    justify-content: space-between; cursor: pointer; border: 1px solid transparent; font-size: 10px;
+    background: var(--surface-2);
+  }
+  .cal-day.empty{ background: none; cursor: default; }
+  .cal-day .d-num{ font-family: 'IBM Plex Mono', monospace; color: var(--text-faint); font-size: 10px; }
+  .cal-day .d-amt{ font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 600; text-align: right; }
+  .cal-day.pos{ background: rgba(52,211,153,0.12); }
+  .cal-day.pos .d-amt{ color: var(--gain); }
+  .cal-day.neg{ background: rgba(248,113,113,0.12); }
+  .cal-day.neg .d-amt{ color: var(--loss); }
+  .cal-day.selected{ border-color: var(--accent); }
+  .cal-day.today .d-num{ color: var(--accent); }
+  .cal-detail{ margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .cal-detail-row{ display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+
   footer{ text-align: center; color: var(--text-faint); font-size: 11.5px; margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border); }
 
   @media (max-width: 560px){
@@ -258,6 +278,7 @@
     <button class="tab-btn active" data-tab="registre">Registre</button>
     <button class="tab-btn" data-tab="matchs">Matchs du jour</button>
     <button class="tab-btn" data-tab="historique">Historique</button>
+    <button class="tab-btn" data-tab="calendrier">Calendrier</button>
   </div>
 
   <!-- ============ VIEW: REGISTRE ============ -->
@@ -373,6 +394,23 @@
     <div class="disclaimer">
       Toutes les données ci-dessus sont réelles (scores, statistiques de match, historique récent) — aucune n'est un pronostic généré. C'est une photo prise à un instant donné ; demande-moi de rafraîchir si tu veux les derniers chiffres.
     </div>
+  </div>
+
+  <!-- ============ VIEW: CALENDRIER ============ -->
+  <div class="view" id="view-calendrier">
+    <section style="margin-top:20px;">
+      <h2>Calendrier des résultats</h2>
+      <div class="section-note">Ton résultat net (gains − pertes) jour par jour. Les retraits et mises en attente ne comptent pas ici, seulement les résultats réels.</div>
+      <div class="panel" style="padding:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <button class="ghost small" id="cal-prev">← Précédent</button>
+          <div id="cal-label" style="font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:15px;"></div>
+          <button class="ghost small" id="cal-next">Suivant →</button>
+        </div>
+        <div id="cal-grid" class="cal-grid"></div>
+        <div id="cal-detail" class="cal-detail" style="display:none;"></div>
+      </div>
+    </section>
   </div>
 
   <!-- ============ VIEW: HISTORIQUE ============ -->
@@ -827,19 +865,14 @@
       return;
     }
     const pending = manualMatches.filter(m => !m.status || m.status === 'pending');
-    const won = manualMatches.filter(m => m.status === 'won');
     const totalMise = pending.reduce((s,m)=>s+m.mise,0);
     const totalPotentiel = pending.reduce((s,m)=>s+(m.mise*m.cote - m.mise),0);
     const totalARecevoir = pending.reduce((s,m)=>s+(m.mise*m.cote),0);
-    const totalGagne = won.reduce((s,m)=>s+(m.mise*m.cote - m.mise),0);
     const summaryHtml = `
-      <div class="kpi-row" style="grid-template-columns:repeat(3, 1fr); margin-bottom:10px;">
+      <div class="kpi-row" style="grid-template-columns:repeat(3, 1fr); margin-bottom:16px;">
         <div class="kpi"><div class="label">Total misé (en attente)</div><div class="value">${fmtEUR(totalMise)}</div></div>
         <div class="kpi"><div class="label">Total à recevoir (en attente)</div><div class="value">${fmtEUR(totalARecevoir)}</div></div>
         <div class="kpi"><div class="label">Gain potentiel (en attente)</div><div class="value gain">+${fmtEUR(totalPotentiel)}</div></div>
-      </div>
-      <div class="kpi-row" style="grid-template-columns:1fr; margin-bottom:16px;">
-        <div class="kpi"><div class="label">Total argent gagné (paris résolus)</div><div class="value gain">+${fmtEUR(totalGagne)}</div></div>
       </div>`;
     const sorted = [...manualMatches].sort((a,b)=>{
       const aPending = (!a.status || a.status==='pending') ? 0 : 1;
@@ -938,6 +971,7 @@
     if(config){ renderKPIs(); renderChart(); renderLedger(); }
     renderManualMatches();
     renderHistory();
+    renderCalendar();
   }
 
   function renderHistory(){
@@ -987,6 +1021,80 @@
 
   const historySearchEl = document.getElementById('history-search');
   if(historySearchEl){ historySearchEl.addEventListener('input', renderHistory); }
+
+  /* ---------- Calendrier ---------- */
+  let calDate = new Date(); calDate.setDate(1);
+  let calSelectedDate = null;
+
+  function renderCalendar(){
+    const grid = document.getElementById('cal-grid');
+    const label = document.getElementById('cal-label');
+    if(!grid) return;
+
+    label.textContent = calDate.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+
+    const year = calDate.getFullYear(), month = calDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    let startWeekday = firstDay.getDay(); // 0=dimanche
+    startWeekday = (startWeekday + 6) % 7; // lundi = 0
+
+    // Résultat net (gain - perte uniquement, hors retrait/engagé) par date
+    const dailyNet = {};
+    entries.forEach(e=>{
+      const kind = e.type || (e.amount>=0?'gain':'perte');
+      if(kind !== 'gain' && kind !== 'perte') return;
+      dailyNet[e.date] = (dailyNet[e.date] || 0) + e.amount;
+    });
+
+    const todayStr = new Date().toISOString().slice(0,10);
+    const weekdays = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+    let html = weekdays.map(w=>`<div class="cal-weekday">${w}</div>`).join('');
+    for(let i=0;i<startWeekday;i++){ html += `<div class="cal-day empty"></div>`; }
+    for(let d=1; d<=daysInMonth; d++){
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const net = dailyNet[dateStr];
+      const cls = net === undefined ? '' : (net >= 0 ? 'pos' : 'neg');
+      const todayCls = dateStr === todayStr ? 'today' : '';
+      const selCls = dateStr === calSelectedDate ? 'selected' : '';
+      const amtLabel = net === undefined ? '' : (net>=0?'+':'\u2212') + Math.abs(net).toLocaleString('fr-FR',{maximumFractionDigits:0});
+      html += `<div class="cal-day ${cls} ${todayCls} ${selCls}" data-date="${dateStr}"><span class="d-num">${d}</span><span class="d-amt">${amtLabel}</span></div>`;
+    }
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.cal-day:not(.empty)').forEach(cell=>{
+      cell.addEventListener('click', ()=>{
+        calSelectedDate = cell.dataset.date === calSelectedDate ? null : cell.dataset.date;
+        renderCalendar();
+        renderCalendarDetail();
+      });
+    });
+
+    renderCalendarDetail();
+  }
+
+  function renderCalendarDetail(){
+    const detail = document.getElementById('cal-detail');
+    if(!detail) return;
+    if(!calSelectedDate){ detail.style.display = 'none'; return; }
+    const dayEntries = entries.filter(e => e.date === calSelectedDate);
+    const dateFmt = new Date(calSelectedDate+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    if(dayEntries.length === 0){
+      detail.innerHTML = `<div class="section-note" style="margin:0;">Aucun mouvement le ${dateFmt}.</div>`;
+    } else {
+      detail.innerHTML = `<div style="font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:14px; margin-bottom:8px;">${dateFmt}</div>` +
+        dayEntries.map(e=>{
+          const kind = e.type || (e.amount>=0?'gain':'perte');
+          const cls = kind === 'gain' ? 'gain' : (kind === 'retrait' ? 'retrait' : (kind === 'engage' ? 'engage' : 'loss'));
+          const title = e.note || (kind==='gain'?'Gain':(kind==='perte'?'Perte':(kind==='retrait'?'Retrait':'Mise engagée')));
+          return `<div class="cal-detail-row"><span>${escapeHtml(title)}</span><span class="amount ${cls}" style="font-family:'IBM Plex Mono', monospace;">${e.amount>=0?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>`;
+        }).join('');
+    }
+    detail.style.display = 'block';
+  }
+
+  document.getElementById('cal-prev').addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()-1); renderCalendar(); });
+  document.getElementById('cal-next').addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()+1); renderCalendar(); });
 
   document.getElementById('add-entry-btn').addEventListener('click', async ()=>{
     const dateEl = document.getElementById('entry-date');
