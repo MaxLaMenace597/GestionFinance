@@ -330,6 +330,7 @@
         <div class="kpi"><div class="label">Bénéfice réel</div><div class="value" id="stat-benefice">—</div></div>
         <div class="kpi"><div class="label">Total misé (tous paris)</div><div class="value" id="stat-total-mise">—</div></div>
         <div class="kpi"><div class="label">Misé, en attente</div><div class="value" id="stat-mise-attente" style="color:var(--tennis);">—</div></div>
+        <div class="kpi"><div class="label">Gain possible (si paris gagnés)</div><div class="value gain" id="stat-gain-potentiel">—</div></div>
       </div>
 
       <section id="entry-section">
@@ -575,6 +576,8 @@
     document.getElementById('stat-total-mise').textContent = fmtEUR(totalMiseAllBets);
     const miseEnAttente = manualMatches.filter(m => !m.status || m.status === 'pending').reduce((s,m)=>s+m.mise, 0);
     document.getElementById('stat-mise-attente').textContent = fmtEUR(miseEnAttente);
+    const gainPotentiel = manualMatches.filter(m => !m.status || m.status === 'pending').reduce((s,m)=>s+(m.mise*m.cote - m.mise), 0);
+    document.getElementById('stat-gain-potentiel').textContent = '+' + fmtEUR(gainPotentiel);
   }
 
   function getFilteredPoints(){
