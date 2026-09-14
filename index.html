@@ -1151,10 +1151,13 @@
       const cls = kind === 'gain' ? 'gain' : (kind === 'retrait' ? 'retrait' : 'loss');
       const title = e.note || (kind==='gain'?'Gain':(kind==='perte'?'Perte':'Retrait'));
       return `
-        <div class="ledger-item">
-          <div class="ledger-dot ${cls}">${kind==='gain'?'\u25b2':(kind==='retrait'?'\u2193':'\u25bc')}</div>
-          <div class="ledger-main"><div class="note">${escapeHtml(title)}</div>${e.description ? `<div class="date" style="white-space:normal;">${escapeHtml(e.description)}</div>` : ''}</div>
-          <div class="ledger-side"><div class="amount ${cls}">${e.amount>=0?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+        <div class="ledger-entry" data-eid="${e.id}">
+          <div class="ledger-item" style="cursor:pointer;">
+            <div class="ledger-dot ${cls}">${kind==='gain'?'\u25b2':(kind==='retrait'?'\u2193':'\u25bc')}</div>
+            <div class="ledger-main"><div class="note">${escapeHtml(title)}</div></div>
+            <div class="ledger-side"><div class="amount ${cls}">${e.amount>=0?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+          </div>
+          <div class="history-desc"><div class="history-desc-inner">${e.description ? escapeHtml(e.description) : 'Aucune description ajoutée pour ce mouvement.'}</div></div>
         </div>`;
     }).join('');
 
@@ -1167,6 +1170,9 @@
 
     detail.querySelectorAll('.ledger-entry[data-tid]').forEach(entryEl=>{
       entryEl.querySelector('.match-card').addEventListener('click', ()=>{ entryEl.classList.toggle('open'); });
+    });
+    detail.querySelectorAll('.ledger-entry[data-eid]').forEach(entryEl=>{
+      entryEl.querySelector('.ledger-item').addEventListener('click', ()=>{ entryEl.classList.toggle('open'); });
     });
   }
 
