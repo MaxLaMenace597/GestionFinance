@@ -112,7 +112,7 @@
   svg.chart.dragging{ cursor: grabbing; }
 
   /* ---------- KPI row ---------- */
-  .kpi-row{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 16px 0 30px 0; }
+  .kpi-row{ display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 16px 0 30px 0; }
   .kpi{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
   .kpi .label{ font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
   .kpi .value{ font-family: 'IBM Plex Mono', monospace; font-size: 16.5px; }
@@ -300,6 +300,7 @@
         <div class="kpi"><div class="label">Pertes cumulées</div><div class="value loss" id="stat-pertes">—</div></div>
         <div class="kpi"><div class="label">Total retiré</div><div class="value" id="stat-retraits">—</div></div>
         <div class="kpi"><div class="label">Bénéfice réel</div><div class="value" id="stat-benefice">—</div></div>
+        <div class="kpi"><div class="label">Total misé (tous paris)</div><div class="value" id="stat-total-mise">—</div></div>
       </div>
 
       <section id="entry-section">
@@ -521,6 +522,8 @@
     const beneficeEl = document.getElementById('stat-benefice');
     beneficeEl.textContent = (benefice>=0?'+':'') + fmtEUR(benefice);
     beneficeEl.style.color = benefice >= 0 ? 'var(--gain)' : 'var(--loss)';
+    const totalMiseAllBets = manualMatches.reduce((s,m)=>s+m.mise, 0);
+    document.getElementById('stat-total-mise').textContent = fmtEUR(totalMiseAllBets);
   }
 
   function getFilteredPoints(){
@@ -824,12 +827,19 @@
       return;
     }
     const pending = manualMatches.filter(m => !m.status || m.status === 'pending');
+    const won = manualMatches.filter(m => m.status === 'won');
     const totalMise = pending.reduce((s,m)=>s+m.mise,0);
     const totalPotentiel = pending.reduce((s,m)=>s+(m.mise*m.cote - m.mise),0);
+    const totalARecevoir = pending.reduce((s,m)=>s+(m.mise*m.cote),0);
+    const totalGagne = won.reduce((s,m)=>s+(m.mise*m.cote - m.mise),0);
     const summaryHtml = `
-      <div class="kpi-row" style="grid-template-columns:1fr 1fr; margin-bottom:16px;">
+      <div class="kpi-row" style="grid-template-columns:repeat(3, 1fr); margin-bottom:10px;">
         <div class="kpi"><div class="label">Total misé (en attente)</div><div class="value">${fmtEUR(totalMise)}</div></div>
+        <div class="kpi"><div class="label">Total à recevoir (en attente)</div><div class="value">${fmtEUR(totalARecevoir)}</div></div>
         <div class="kpi"><div class="label">Gain potentiel (en attente)</div><div class="value gain">+${fmtEUR(totalPotentiel)}</div></div>
+      </div>
+      <div class="kpi-row" style="grid-template-columns:1fr; margin-bottom:16px;">
+        <div class="kpi"><div class="label">Total argent gagné (paris résolus)</div><div class="value gain">+${fmtEUR(totalGagne)}</div></div>
       </div>`;
     const sorted = [...manualMatches].sort((a,b)=>{
       const aPending = (!a.status || a.status==='pending') ? 0 : 1;
