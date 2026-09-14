@@ -161,6 +161,7 @@
   .ledger-dot.gain{ background: rgba(52,211,153,0.14); color: var(--gain); }
   .ledger-dot.loss{ background: rgba(248,113,113,0.14); color: var(--loss); }
   .ledger-dot.retrait{ background: rgba(34,211,238,0.14); color: var(--accent); }
+  .ledger-dot.engage{ background: rgba(251,191,36,0.14); color: var(--tennis); }
   .ledger-main{ flex: 1; min-width: 0; }
   .ledger-main .note{ font-size: 13.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ledger-main .date{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
@@ -169,6 +170,7 @@
   .ledger-side .amount.gain{ color: var(--gain); }
   .ledger-side .amount.loss{ color: var(--loss); }
   .ledger-side .amount.retrait{ color: var(--accent); }
+  .ledger-side .amount.engage{ color: var(--tennis); }
   .ledger-side .running{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); margin-top: 2px; }
   .ledger-del{ background:none; border:none; color: var(--text-faint); cursor:pointer; font-size:14px; padding: 4px; flex-shrink: 0; }
   .ledger-del:hover{ color: var(--loss); }
@@ -223,6 +225,18 @@
 
   .disclaimer{ font-size: 11.5px; color: var(--text-faint); border-left: 2px solid var(--accent); padding: 8px 14px; margin-top: 16px; background: rgba(34,211,238,0.05); }
 
+  /* ---------- Historique ---------- */
+  .history-item{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+  .history-head{ display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; }
+  .history-head .h-note{ font-size: 13.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-head .h-date{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-faint); flex-shrink: 0; }
+  .history-head .h-amount{ font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; flex-shrink: 0; }
+  .history-head .h-chevron{ color: var(--text-faint); font-size: 11px; flex-shrink: 0; transition: transform 0.2s ease; }
+  .history-item.open .h-chevron{ transform: rotate(180deg); }
+  .history-desc{ max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 1px solid var(--border); }
+  .history-item.open .history-desc{ max-height: 400px; }
+  .history-desc-inner{ padding: 12px 14px; font-size: 13px; color: var(--text-dim); }
+
   footer{ text-align: center; color: var(--text-faint); font-size: 11.5px; margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border); }
 
   @media (max-width: 560px){
@@ -243,6 +257,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="registre">Registre</button>
     <button class="tab-btn" data-tab="matchs">Matchs du jour</button>
+    <button class="tab-btn" data-tab="historique">Historique</button>
   </div>
 
   <!-- ============ VIEW: REGISTRE ============ -->
@@ -297,8 +312,11 @@
               <select id="entry-type"><option value="gain">Gain</option><option value="perte">Perte</option><option value="retrait">Retrait</option></select>
             </div>
             <div class="field" style="max-width:130px;"><label for="entry-amount">Montant (€)</label><input type="number" id="entry-amount" min="0" step="0.01" placeholder="0.00"></div>
-            <div class="field" style="min-width:200px;"><label for="entry-note">Note (optionnel)</label><input type="text" id="entry-note" placeholder="ex. double foot + tennis"></div>
+            <div class="field" style="min-width:200px;"><label for="entry-note">Titre / note (optionnel)</label><input type="text" id="entry-note" placeholder="ex. double foot + tennis"></div>
             <button id="add-entry-btn">Ajouter</button>
+          </div>
+          <div class="field-row" style="margin-top:10px;">
+            <div class="field"><label for="entry-description">Description (optionnel)</label><textarea id="entry-description" placeholder="détails, contexte, ce que tu retiens de cette journée..."></textarea></div>
           </div>
         </div>
 
@@ -313,9 +331,19 @@
             <div class="field" style="max-width:110px;"><label for="match-sport">Sport</label>
               <select id="match-sport"><option value="Football">Football</option><option value="Tennis">Tennis</option><option value="Autre">Autre</option></select>
             </div>
-            <div class="field" style="min-width:180px;"><label for="match-teams">Match</label><input type="text" id="match-teams" placeholder="ex. PSG — OM"></div>
-            <div class="field" style="max-width:100px;"><label for="match-cote">Cote</label><input type="number" id="match-cote" min="1.01" step="0.01" placeholder="1.85"></div>
+            <div class="field" style="max-width:100px;"><label for="match-cote">Cote finale</label><input type="number" id="match-cote" min="1.01" step="0.01" placeholder="1.85"></div>
             <div class="field" style="max-width:110px;"><label for="match-mise">Mise envisagée (€)</label><input type="number" id="match-mise" min="0" step="0.5" placeholder="10"></div>
+          </div>
+          <div class="field-row" style="margin-top:10px; align-items:flex-start;">
+            <div class="field" style="flex:1;">
+              <label>Match(s) — ajoute-en plusieurs pour un combiné</label>
+              <div id="match-teams-list" style="display:flex; flex-direction:column; gap:8px;">
+                <div class="field-row" style="gap:6px;">
+                  <input type="text" class="match-team-input" placeholder="ex. PSG — OM" style="flex:1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
+                </div>
+              </div>
+              <button type="button" class="ghost small" id="add-match-row-btn" style="margin-top:8px;">+ Ajouter un match</button>
+            </div>
           </div>
           <div class="field-row" style="margin-top:12px;">
             <div class="field"><label for="match-note">Ton analyse</label><textarea id="match-note" placeholder="forme récente, absences, ton raisonnement..."></textarea></div>
@@ -344,6 +372,18 @@
     <div class="disclaimer">
       Toutes les données ci-dessus sont réelles (scores, statistiques de match, historique récent) — aucune n'est un pronostic généré. C'est une photo prise à un instant donné ; demande-moi de rafraîchir si tu veux les derniers chiffres.
     </div>
+  </div>
+
+  <!-- ============ VIEW: HISTORIQUE ============ -->
+  <div class="view" id="view-historique">
+    <section style="margin-top:20px;">
+      <h2>Historique</h2>
+      <div class="section-note">Retrouve tous tes mouvements. Clique sur une ligne pour voir la description que tu as ajoutée.</div>
+      <div class="panel" style="padding:10px 12px;">
+        <input type="text" id="history-search" placeholder="Rechercher par titre..." style="width:100%; background:none; border:none; color:var(--text); font-family:'IBM Plex Mono', monospace; font-size:14px; outline:none;">
+      </div>
+      <div id="history-list" style="margin-top:14px;"></div>
+    </section>
   </div>
 
   <footer>Tes données restent sur cet appareil, dans ton espace personnel.</footer>
@@ -452,8 +492,9 @@
 
   function computeStats(){
     const gains = entries.filter(e=> e.type ? e.type==='gain' : e.amount>0).reduce((s,e)=>s+e.amount,0);
-    const pertes = entries.filter(e=> e.type ? e.type==='perte' : e.amount<0).reduce((s,e)=>s+Math.abs(e.amount),0);
+    const pertes = entries.filter(e=> e.type==='perte' || (!e.type && e.amount<0)).reduce((s,e)=>s+Math.abs(e.amount),0);
     const retraits = entries.filter(e=> e.type==='retrait').reduce((s,e)=>s+Math.abs(e.amount),0);
+    const engages = entries.filter(e=> e.type==='engage').reduce((s,e)=>s+Math.abs(e.amount),0);
     const benefice = gains - pertes; // profit réel de l'activité de paris, indépendant des retraits et de la mise de départ
     const balance = config.depart + entries.reduce((s,e)=>s+e.amount,0);
     return { gains, pertes, retraits, benefice, balance };
@@ -594,7 +635,7 @@
     for(let i=1;i<coords.length;i++){
       const a = coords[i-1], b = coords[i];
       const up = b.val >= a.val;
-      const segColor = b.type === 'retrait' ? '#22d3ee' : (up ? '#34d399' : '#f87171');
+      const segColor = b.type === 'retrait' ? '#22d3ee' : (b.type === 'engage' ? '#fbbf24' : (up ? '#34d399' : '#f87171'));
       segPaths += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)}" fill="none" stroke="${segColor}" stroke-width="2.5" stroke-linecap="round"/>`;
     }
 
@@ -626,7 +667,7 @@
       <path d="${areaPath}" fill="url(#areaGrad)" stroke="none"/>
       ${segPaths}
       ${coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="10" fill="transparent" class="hit" data-x="${c.x}" data-y="${c.y}" data-val="${c.val}" data-date="${c.date||''}"/>`).join('')}
-      <circle cx="${coords[coords.length-1].x.toFixed(1)}" cy="${coords[coords.length-1].y.toFixed(1)}" r="4" fill="${coords[coords.length-1].type === 'retrait' ? '#22d3ee' : mainColor}"/>
+      <circle cx="${coords[coords.length-1].x.toFixed(1)}" cy="${coords[coords.length-1].y.toFixed(1)}" r="4" fill="${coords[coords.length-1].type === 'retrait' ? '#22d3ee' : (coords[coords.length-1].type === 'engage' ? '#fbbf24' : mainColor)}"/>
     `;
     wrap.insertBefore(svg, tooltip);
     wireZoomPan(svg, wrap, allPoints.length);
@@ -746,10 +787,11 @@
       const kind = e.type || (e.amount >= 0 ? 'gain' : 'perte'); // rétro-compatibilité avec les anciennes entrées sans type
       const isGain = kind === 'gain';
       const isRetrait = kind === 'retrait';
-      const dotClass = isGain ? 'gain' : (isRetrait ? 'retrait' : 'loss');
-      const amountClass = isGain ? 'gain' : (isRetrait ? 'retrait' : 'loss');
-      const icon = isGain ? '\u25b2' : (isRetrait ? '\u2193' : '\u25bc');
-      const defaultNote = isGain ? 'Gain du jour' : (isRetrait ? 'Retrait' : 'Perte du jour');
+      const isEngage = kind === 'engage';
+      const dotClass = isGain ? 'gain' : (isRetrait ? 'retrait' : (isEngage ? 'engage' : 'loss'));
+      const amountClass = isGain ? 'gain' : (isRetrait ? 'retrait' : (isEngage ? 'engage' : 'loss'));
+      const icon = isGain ? '\u25b2' : (isRetrait ? '\u2193' : (isEngage ? '\u23f3' : '\u25bc'));
+      const defaultNote = isGain ? 'Gain du jour' : (isRetrait ? 'Retrait' : (isEngage ? 'Mise engagée' : 'Perte du jour'));
       const dateFmt = new Date(e.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
       return `
         <div class="ledger-item">
@@ -799,6 +841,11 @@
       const implied = (1 / m.cote * 100);
       const potentialGain = m.mise * m.cote - m.mise;
       const status = m.status || 'pending';
+      const matchesList = m.matches && m.matches.length ? m.matches : (m.teams ? [m.teams] : []);
+      const isCombo = matchesList.length > 1;
+      const titleLine = isCombo
+        ? matchesList.map(t=>`<div style="font-size:13.5px;">${escapeHtml(t)}</div>`).join('')
+        : `<div style="font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px;">${escapeHtml(matchesList[0] || '')}</div>`;
       let statusBadgeHtml = '';
       let actionsHtml = '';
       if(status === 'pending'){
@@ -816,18 +863,19 @@
       return `
         <div class="panel" style="margin-bottom:10px; ${status!=='pending' ? 'opacity:0.75;' : ''}">
           <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;">
-            <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--text-faint);">${escapeHtml(m.sport).toUpperCase()}</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--text-faint);">${escapeHtml(m.sport).toUpperCase()}${isCombo ? ` · COMBIN\u00c9 (${matchesList.length} matchs)` : ''}</span>
             <div style="display:flex; align-items:center; gap:8px;">
               ${statusBadgeHtml}
               <button class="danger-ghost small" data-action="delete" data-id="${m.id}">Retirer</button>
             </div>
           </div>
-          <div style="font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px; margin:4px 0 10px 0;">${escapeHtml(m.teams)}</div>
-          <div class="kpi-row" style="margin:0; grid-template-columns:1fr 1fr;">
-            <div class="kpi" style="padding:10px 12px;"><div class="label">Cote</div><div class="value">${m.cote.toFixed(2)}</div></div>
+          <div style="margin:6px 0 10px 0; ${isCombo ? 'border-left:2px solid var(--border); padding-left:10px;' : ''}">${titleLine}</div>
+          <div class="kpi-row" style="margin:0; grid-template-columns:repeat(3, 1fr);">
+            <div class="kpi" style="padding:10px 12px;"><div class="label">Cote finale</div><div class="value">${m.cote.toFixed(2)}</div></div>
             <div class="kpi" style="padding:10px 12px;"><div class="label">Probabilité implicite</div><div class="value">${implied.toFixed(1)} %</div></div>
             <div class="kpi" style="padding:10px 12px;"><div class="label">Mise engagée</div><div class="value">${fmtEUR(m.mise)}</div></div>
-            <div class="kpi" style="padding:10px 12px;"><div class="label">Gain potentiel</div><div class="value gain">+${fmtEUR(potentialGain)}</div></div>
+            <div class="kpi" style="padding:10px 12px;"><div class="label">Total à recevoir</div><div class="value">${fmtEUR(m.mise * m.cote)}</div></div>
+            <div class="kpi" style="padding:10px 12px;"><div class="label">Gain net</div><div class="value gain">+${fmtEUR(potentialGain)}</div></div>
           </div>
           ${m.note ? `<div style="margin-top:10px; font-size:13px; color:var(--text-dim);">${escapeHtml(m.note)}</div>` : ''}
           ${actionsHtml}
@@ -836,9 +884,15 @@
 
     list.querySelectorAll('[data-action="delete"]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
-        manualMatches = manualMatches.filter(m=>m.id !== parseFloat(btn.dataset.id));
+        const id = parseFloat(btn.dataset.id);
+        const ticket = manualMatches.find(m=>m.id === id);
+        manualMatches = manualMatches.filter(m=>m.id !== id);
+        if(ticket && ticket.status === 'pending' && ticket.pendingEntryId){
+          entries = entries.filter(e => e.id !== ticket.pendingEntryId);
+          await saveEntries();
+        }
         await saveManualMatches();
-        renderManualMatches();
+        renderRegistre();
       });
     });
 
@@ -850,11 +904,17 @@
         const won = btn.dataset.action === 'won';
         ticket.status = won ? 'won' : 'lost';
         const today = new Date().toISOString().slice(0,10);
+        const matchesList = ticket.matches && ticket.matches.length ? ticket.matches : (ticket.teams ? [ticket.teams] : []);
+        const label = matchesList.length > 1 ? `Combiné (${matchesList.length} matchs) \u2014 ${matchesList.join(' + ')}` : matchesList[0];
+        // On retire l'entrée "mise engagée" temporaire et on la remplace par le résultat définitif
+        if(ticket.pendingEntryId){
+          entries = entries.filter(e => e.id !== ticket.pendingEntryId);
+        }
         if(won){
           const netProfit = ticket.mise * ticket.cote - ticket.mise;
-          entries.push({ id: Date.now(), date: today, amount: netProfit, type: 'gain', note: `Pari gagné \u2014 ${ticket.teams}` });
+          entries.push({ id: Date.now(), date: today, amount: netProfit, type: 'gain', note: `Pari gagné \u2014 ${label}` });
         } else {
-          entries.push({ id: Date.now(), date: today, amount: -ticket.mise, type: 'perte', note: `Pari perdu \u2014 ${ticket.teams}` });
+          entries.push({ id: Date.now(), date: today, amount: -ticket.mise, type: 'perte', note: `Pari perdu \u2014 ${label}` });
         }
         await saveManualMatches();
         await saveEntries();
@@ -867,38 +927,110 @@
     renderSetup();
     if(config){ renderKPIs(); renderChart(); renderLedger(); }
     renderManualMatches();
+    renderHistory();
   }
+
+  function renderHistory(){
+    const list = document.getElementById('history-list');
+    if(!list) return;
+    const searchEl = document.getElementById('history-search');
+    const query = (searchEl && searchEl.value ? searchEl.value : '').trim().toLowerCase();
+
+    let filtered = [...entries].sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
+    if(query){
+      filtered = filtered.filter(e => (e.note || '').toLowerCase().includes(query));
+    }
+
+    if(entries.length === 0){
+      list.innerHTML = `<div class="empty-state">Aucun mouvement enregistré pour le moment.</div>`;
+      return;
+    }
+    if(filtered.length === 0){
+      list.innerHTML = `<div class="empty-state">Aucun résultat pour "${escapeHtml(query)}".</div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(e=>{
+      const kind = e.type || (e.amount >= 0 ? 'gain' : 'perte');
+      const isGain = kind === 'gain';
+      const isRetrait = kind === 'retrait';
+      const isEngage = kind === 'engage';
+      const amountClass = isGain ? 'gain' : (isRetrait ? 'retrait' : (isEngage ? 'engage' : 'loss'));
+      const defaultTitle = isGain ? 'Gain du jour' : (isRetrait ? 'Retrait' : (isEngage ? 'Mise engagée' : 'Perte du jour'));
+      const dateFmt = new Date(e.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+      return `
+        <div class="history-item" data-id="${e.id}">
+          <div class="history-head">
+            <span class="h-note">${e.note ? escapeHtml(e.note) : defaultTitle}</span>
+            <span class="h-date">${dateFmt}</span>
+            <span class="h-amount ${amountClass}">${isGain?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+            <span class="h-chevron">\u25be</span>
+          </div>
+          <div class="history-desc"><div class="history-desc-inner">${e.description ? escapeHtml(e.description) : 'Aucune description ajoutée pour ce mouvement.'}</div></div>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.history-item').forEach(item=>{
+      item.querySelector('.history-head').addEventListener('click', ()=>{ item.classList.toggle('open'); });
+    });
+  }
+
+  const historySearchEl = document.getElementById('history-search');
+  if(historySearchEl){ historySearchEl.addEventListener('input', renderHistory); }
 
   document.getElementById('add-entry-btn').addEventListener('click', async ()=>{
     const dateEl = document.getElementById('entry-date');
     const typeEl = document.getElementById('entry-type');
     const amountEl = document.getElementById('entry-amount');
     const noteEl = document.getElementById('entry-note');
+    const descEl = document.getElementById('entry-description');
     const date = dateEl.value || new Date().toISOString().slice(0,10);
     const rawAmount = parseFloat(amountEl.value);
     if(isNaN(rawAmount) || rawAmount <= 0){ amountEl.focus(); return; }
     const amount = typeEl.value === 'gain' ? rawAmount : -rawAmount;
-    entries.push({ id: Date.now(), date, amount, type: typeEl.value, note: noteEl.value.trim() });
+    entries.push({ id: Date.now(), date, amount, type: typeEl.value, note: noteEl.value.trim(), description: descEl.value.trim() });
     await saveEntries();
-    amountEl.value=''; noteEl.value='';
+    amountEl.value=''; noteEl.value=''; descEl.value='';
     renderRegistre();
+  });
+
+  document.getElementById('add-match-row-btn').addEventListener('click', ()=>{
+    const container = document.getElementById('match-teams-list');
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    row.style.gap = '6px';
+    row.innerHTML = `
+      <input type="text" class="match-team-input" placeholder="ex. Real Madrid — Barcelone" style="flex:1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
+      <button type="button" class="danger-ghost small remove-match-row">✕</button>`;
+    container.appendChild(row);
+    row.querySelector('.remove-match-row').addEventListener('click', ()=>{ row.remove(); });
   });
 
   document.getElementById('add-match-btn').addEventListener('click', async ()=>{
     const sport = document.getElementById('match-sport').value;
-    const teamsEl = document.getElementById('match-teams');
+    const teamInputs = Array.from(document.querySelectorAll('.match-team-input'));
+    const matches = teamInputs.map(i=>i.value.trim()).filter(v=>v);
     const coteEl = document.getElementById('match-cote');
     const miseEl = document.getElementById('match-mise');
     const noteEl = document.getElementById('match-note');
-    const teams = teamsEl.value.trim();
     const cote = parseFloat(coteEl.value);
     const mise = parseFloat(miseEl.value) || 0;
-    if(!teams){ teamsEl.focus(); return; }
+    if(matches.length === 0){ teamInputs[0].focus(); return; }
     if(isNaN(cote) || cote <= 1){ coteEl.focus(); return; }
-    manualMatches.push({ id: Date.now(), sport, teams, cote, mise, note: noteEl.value.trim(), status: 'pending' });
+    const label = matches.length > 1 ? `Combiné (${matches.length} matchs) \u2014 ${matches.join(' + ')}` : matches[0];
+    const pendingEntryId = Date.now();
+    manualMatches.push({ id: Date.now() + 1, sport, matches, cote, mise, note: noteEl.value.trim(), status: 'pending', pendingEntryId });
+    // La mise se déduit tout de suite du solde/graphique pour montrer l'argent engagé, en attente du résultat.
+    entries.push({ id: pendingEntryId, date: new Date().toISOString().slice(0,10), amount: -mise, type: 'engage', note: `Mise engagée \u2014 ${label}` });
     await saveManualMatches();
-    teamsEl.value=''; coteEl.value=''; miseEl.value=''; noteEl.value='';
-    renderManualMatches();
+    await saveEntries();
+    // Réinitialise le formulaire à une seule ligne de match
+    document.getElementById('match-teams-list').innerHTML = `
+      <div class="field-row" style="gap:6px;">
+        <input type="text" class="match-team-input" placeholder="ex. PSG — OM" style="flex:1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
+      </div>`;
+    coteEl.value=''; miseEl.value=''; noteEl.value='';
+    renderRegistre();
   });
 
   document.getElementById('entry-date').valueAsDate = new Date();
