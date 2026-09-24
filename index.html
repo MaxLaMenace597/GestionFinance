@@ -2,1487 +2,1371 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suivi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f15">
+<title>Mes comptes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
-
   :root{
-    --bg: #0a0e14;
-    --surface: #121821;
-    --surface-2: #1a212c;
-    --surface-3: #212a36;
-    --border: #232c38;
-    --text: #eef1f5;
-    --text-dim: #8b96a3;
-    --text-faint: #54606f;
-    --accent: #22d3ee;
-    --gain: #34d399;
-    --loss: #f87171;
-    --football: #38bdf8;
-    --tennis: #fbbf24;
-    --radius: 10px;
+    --bg:#0b0f15; --surface:#131922; --surface-2:#1a212c; --surface-3:#232c39;
+    --border:#242e3b; --text:#eef1f5; --text-dim:#93a0af; --text-faint:#5d6a7b;
+    --accent:#22d3ee; --in:#34d399; --out:#f87171; --warn:#fbbf24;
+    --radius:14px; --radius-sm:9px;
+    --display:'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --body:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-
-  *{ box-sizing: border-box; }
-  html,body{ margin:0; padding:0; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *,*::before,*::after{ box-sizing: border-box; }
+  [hidden]{ display:none !important; }
+  html,body{ margin:0; }
   body{
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    line-height: 1.5;
-    padding: 0 0 90px 0;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
+    background: var(--bg); color: var(--text); font-family: var(--body); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; padding-bottom: 110px; min-height: 100%;
+    font-variant-numeric: tabular-nums;
   }
-  .wrap{ max-width: 820px; margin: 0 auto; padding: 0 20px; }
+  button{ font: inherit; color: inherit; cursor: pointer; }
+  input, select, textarea{ font: inherit; }
+  .wrap{ max-width: 900px; margin: 0 auto; padding: 0 18px; }
 
-  header.masthead{ padding: 30px 0 0 0; display: flex; align-items: center; justify-content: space-between; }
-  header.masthead h1{
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; margin: 0; letter-spacing: -0.01em;
-  }
-  header.masthead .badge-live{
-    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text-faint);
-    border: 1px solid var(--border); padding: 3px 9px; border-radius: 20px;
-  }
+  /* ---------- Header & tabs ---------- */
+  .masthead{ display:flex; align-items:center; justify-content:space-between; padding: 26px 0 0; gap: 12px; }
+  .masthead h1{ font-family: var(--display); font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+  .masthead .sub{ color: var(--text-faint); font-size: 12.5px; margin-top: 1px; }
+  .sync-pill{ display:flex; align-items:center; gap:7px; background: none; border:1px solid var(--border); border-radius: 30px; padding: 5px 11px; font-size: 12px; color: var(--text-dim); }
+  .sync-pill:hover{ border-color: var(--text-faint); }
+  .sync-dot{ width:7px; height:7px; border-radius:50%; background: var(--text-faint); }
+  .sync-pill[data-s="ok"] .sync-dot{ background: var(--in); }
+  .sync-pill[data-s="pending"] .sync-dot{ background: var(--warn); }
+  .sync-pill[data-s="err"] .sync-dot{ background: var(--out); }
 
-  .tabs{ display: flex; gap: 26px; margin: 22px 0 8px 0; border-bottom: 1px solid var(--border); }
-  .tab-btn{
-    background: none; border: none; color: var(--text-faint); font-family: 'Inter', sans-serif;
-    font-weight: 600; font-size: 14px; padding: 10px 0; cursor: pointer; position: relative; top: 1px;
-  }
-  .tab-btn.active{ color: var(--text); border-bottom: 2px solid var(--accent); }
+  .tabs{ display:flex; gap: 22px; margin: 20px 0 0; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab-btn{ background:none; border:none; color: var(--text-faint); font-weight: 600; font-size: 14px; padding: 10px 0; position: relative; top: 1px; white-space: nowrap; border-bottom: 2px solid transparent; }
+  .tab-btn.active{ color: var(--text); border-bottom-color: var(--accent); }
   .tab-btn:hover:not(.active){ color: var(--text-dim); }
 
-  .view{ display: none; animation: fadeIn 0.25s ease; }
-  .view.active{ display: block; }
-  @keyframes fadeIn{ from{ opacity:0; transform: translateY(6px);} to{ opacity:1; transform: translateY(0);} }
+  .view{ display:none; padding-top: 20px; }
+  .view.active{ display:block; animation: viewIn .22s ease; }
+  @keyframes viewIn{ from{ opacity:0; transform: translateY(5px);} to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .view.active{ animation:none; } }
 
-  /* ---------- Hero chart card ---------- */
-  .chart-card{
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 22px 20px 14px 20px; margin-top: 20px;
-  }
-  .chart-top{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; flex-wrap: wrap; gap: 10px; }
-  .chart-top .label{ font-size: 12.5px; color: var(--text-dim); margin-bottom: 4px; }
-  .chart-top .figure{
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 42px; letter-spacing: -0.01em; line-height: 1;
-  }
-  .chart-top .delta{
-    font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; margin-top: 8px; color: var(--text-dim);
-    display: flex; align-items: center; gap: 6px;
-  }
-  .chart-top .delta .pill{
-    padding: 2px 8px; border-radius: 20px; font-size: 12px;
-  }
-  .pill.up{ background: rgba(52,211,153,0.14); color: var(--gain); }
-  .pill.down{ background: rgba(248,113,113,0.14); color: var(--loss); }
-
-  .range-tabs{ display: flex; gap: 4px; background: var(--surface-2); border-radius: 8px; padding: 3px; }
-  .range-btn{
-    background: none; border: none; color: var(--text-faint); font-family: 'IBM Plex Mono', monospace;
-    font-size: 11.5px; padding: 6px 11px; border-radius: 6px; cursor: pointer;
-  }
-  .range-btn.active{ background: var(--surface-3); color: var(--text); }
-
-  .chart-canvas-wrap{ position: relative; margin-top: 14px; }
-  svg.chart{ width: 100%; height: 220px; display: block; overflow: visible; }
-  .chart-tooltip{
-    position: absolute; pointer-events: none; background: var(--surface-3);
-    border: 1px solid var(--border); border-radius: 8px; padding: 7px 11px;
-    font-family: 'IBM Plex Mono', monospace; font-size: 12px; white-space: nowrap;
-    transform: translate(-50%, -115%); opacity: 0; transition: opacity 0.1s ease; z-index: 5;
-  }
-  .chart-tooltip .tt-date{ color: var(--text-faint); font-size: 10.5px; margin-bottom: 2px; }
-  .chart-empty{ color: var(--text-faint); font-size: 13px; padding: 50px 0; text-align: center; }
-
-  .custom-range-row{ display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12.5px; color: var(--text-dim); }
-  .custom-range-row input[type="date"]{
-    background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
-    padding: 6px 8px; border-radius: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
-  }
-  .zoom-hint{ font-size: 11px; color: var(--text-faint); margin-top: 8px; text-align: right; }
-  .zoom-reset{
-    position: absolute; top: 0; right: 0; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-    color: var(--accent); cursor: pointer; padding: 4px 8px; background: var(--surface-2);
-    border-radius: 6px; border: 1px solid var(--border); z-index: 6;
-  }
-  .zoom-reset:hover{ background: var(--surface-3); }
-  svg.chart{ cursor: grab; touch-action: none; }
-  svg.chart.dragging{ cursor: grabbing; }
-
-  /* ---------- KPI row ---------- */
-  .kpi-row{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0 30px 0; }
-  .kpi{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
-  .kpi .label{ font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
-  .kpi .value{ font-family: 'IBM Plex Mono', monospace; font-size: 16.5px; }
-  .kpi .value.gain{ color: var(--gain); }
-  .kpi .value.loss{ color: var(--loss); }
-
-  /* ---------- Sections ---------- */
-  section{ margin-bottom: 36px; }
-  section h2{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16.5px; margin: 0 0 4px 0; }
-  section .section-note{ color: var(--text-dim); font-size: 13px; margin-bottom: 14px; max-width: 60ch; }
-
+  /* ---------- Generic blocks ---------- */
+  section{ margin-bottom: 32px; }
+  h2{ font-family: var(--display); font-size: 17px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .note{ color: var(--text-dim); font-size: 13px; margin: 0 0 14px; max-width: 62ch; }
   .panel{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-  .field-row{ display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-  .field{ display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 120px; }
-  .field label{ font-size: 11.5px; color: var(--text-dim); }
-  .field input, .field select, .field textarea{
+  .faint{ color: var(--text-faint); }
+  .empty{ color: var(--text-faint); font-size: 13.5px; padding: 18px 4px; }
+
+  .btn{ background: var(--accent); color: #052229; border: none; padding: 10px 16px; border-radius: var(--radius-sm); font-weight: 600; font-size: 13.5px; white-space: nowrap; transition: filter .15s ease; }
+  .btn:hover{ filter: brightness(1.1); }
+  .btn.ghost{ background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-weight: 500; }
+  .btn.ghost:hover{ border-color: var(--text-faint); color: var(--text); filter:none; }
+  .btn.danger{ background: transparent; border: 1px solid var(--border); color: var(--text-faint); font-weight: 500; }
+  .btn.danger:hover{ border-color: var(--out); color: var(--out); filter:none; }
+  .btn.ok{ color: var(--in); border-color: rgba(52,211,153,.4); }
+  .btn.small{ padding: 6px 11px; font-size: 12.5px; }
+  .icon-btn{ background:none; border:none; color: var(--text-faint); padding: 6px; border-radius: 7px; font-size: 14px; line-height: 1; }
+  .icon-btn:hover{ color: var(--text); background: var(--surface-2); }
+  .icon-btn.del:hover{ color: var(--out); }
+
+  .row{ display:flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .row + .row{ margin-top: 12px; }
+  .field{ display:flex; flex-direction: column; gap: 6px; flex: 1; min-width: 120px; }
+  .field label{ font-size: 12px; color: var(--text-dim); }
+  .field input, .field select, .field textarea, .input{
     background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
-    padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+    padding: 9px 11px; border-radius: var(--radius-sm); font-size: 14px; width: 100%;
   }
-  .field input:focus, .field select:focus, .field textarea:focus{ outline: 1px solid var(--accent); border-color: var(--accent); }
-  .field textarea{ font-family: 'Inter', sans-serif; resize: vertical; min-height: 40px; }
+  .field textarea{ resize: vertical; min-height: 42px; }
+  .field input:focus, .field select:focus, .field textarea:focus, .input:focus{ outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  :focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  button{
-    background: var(--accent); color: #04222a; border: none; padding: 10px 16px;
-    border-radius: 8px; font-family: 'Inter', sans-serif; font-weight: 600;
-    font-size: 13.5px; cursor: pointer; white-space: nowrap; transition: filter 0.15s ease;
-  }
-  button:hover{ filter: brightness(1.12); }
-  button.ghost{ background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-weight: 500; }
-  button.ghost:hover{ border-color: var(--text-faint); color: var(--text); }
-  button.small{ padding: 5px 10px; font-size: 12px; }
-  button.danger-ghost{ background: transparent; border: 1px solid var(--border); color: var(--text-faint); }
-  button.danger-ghost:hover{ border-color: var(--loss); color: var(--loss); }
+  .seg{ display:inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; gap: 3px; }
+  .seg button{ background:none; border:none; color: var(--text-faint); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+  .seg button.active{ background: var(--surface-3); color: var(--text); }
+  .seg button.active[data-v="out"]{ color: var(--out); }
+  .seg button.active[data-v="in"]{ color: var(--in); }
 
-  /* ---------- Ledger (feed style) ---------- */
-  .ledger-list{ margin-top: 4px; }
-  .ledger-entry{ border-bottom: 1px solid var(--border); }
-  .ledger-entry:last-child{ border-bottom: none; }
-  .ledger-item{
-    display: flex; align-items: center; gap: 12px; padding: 12px 4px;
-    border-bottom: 1px solid var(--border);
-  }
-  .ledger-item:last-child{ border-bottom: none; }
-  .ledger-dot{
-    width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 13px; flex-shrink: 0;
-  }
-  .ledger-dot.gain{ background: rgba(52,211,153,0.14); color: var(--gain); }
-  .ledger-dot.loss{ background: rgba(248,113,113,0.14); color: var(--loss); }
-  .ledger-dot.retrait{ background: rgba(34,211,238,0.14); color: var(--accent); }
-  .ledger-dot.engage{ background: rgba(251,191,36,0.14); color: var(--tennis); }
-  .ledger-main{ flex: 1; min-width: 0; }
-  .ledger-main .note{ font-size: 13.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ledger-main .date{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
-  .ledger-side{ text-align: right; flex-shrink: 0; }
-  .ledger-side .amount{ font-family: 'IBM Plex Mono', monospace; font-size: 14px; }
-  .ledger-side .amount.gain{ color: var(--gain); }
-  .ledger-side .amount.loss{ color: var(--loss); }
-  .ledger-side .amount.retrait{ color: var(--accent); }
-  .ledger-side .amount.engage{ color: var(--tennis); }
-  .ledger-side .running{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); margin-top: 2px; }
-  .ledger-del{ background:none; border:none; color: var(--text-faint); cursor:pointer; font-size:14px; padding: 4px; flex-shrink: 0; }
-  .ledger-del:hover{ color: var(--loss); }
-  .empty-state{ color: var(--text-faint); font-size: 13px; padding: 18px 4px; }
+  /* ---------- Hero chart ---------- */
+  .hero{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 20px 12px; }
+  .hero-top{ display:flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+  .hero .lbl{ font-size: 13px; color: var(--text-dim); }
+  .figure{ font-family: var(--display); font-weight: 700; font-size: clamp(34px, 7vw, 48px); letter-spacing: -0.03em; line-height: 1.05; margin-top: 2px; }
+  .figure.neg{ color: var(--out); }
+  .delta{ display:flex; align-items:center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 12.5px; color: var(--text-faint); }
+  .pill{ padding: 2px 9px; border-radius: 20px; font-size: 12.5px; font-weight: 600; }
+  .pill.up{ background: rgba(52,211,153,.14); color: var(--in); }
+  .pill.down{ background: rgba(248,113,113,.14); color: var(--out); }
+  .range-row{ display:flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .custom-range{ display:flex; align-items:center; gap: 6px; font-size: 12.5px; color: var(--text-dim); }
+  .custom-range input{ background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 5px 7px; border-radius: 7px; font-size: 12.5px; }
 
-  /* ---------- Matches tab ---------- */
-  .snapshot-note{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); margin-bottom: 20px; }
-  .sport-group{ margin-bottom: 28px; }
-  .sport-group-title{ display: flex; align-items: center; gap: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 10px; }
-  .sport-dot{ width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-  .sport-dot.football{ background: var(--football); }
-  .sport-dot.tennis{ background: var(--tennis); }
+  .chart-wrap{ position: relative; margin-top: 12px; }
+  #chart{ display:block; width: 100%; height: 240px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  #chart.dragging{ cursor: grabbing; }
+  .tooltip{ position:absolute; pointer-events:none; background: var(--surface-3); border: 1px solid var(--border); border-radius: 9px; padding: 7px 11px; font-size: 12.5px; white-space: nowrap; transform: translate(-50%, calc(-100% - 12px)); opacity: 0; transition: opacity .1s ease; z-index: 5; }
+  .tooltip .tt-d{ color: var(--text-faint); font-size: 11.5px; }
+  .tooltip .tt-v{ font-weight: 600; }
+  .tooltip .tt-m{ font-size: 11.5px; }
+  .zoom-reset{ position:absolute; top: -4px; left: 0; z-index: 6; }
+  .chart-hint{ font-size: 11.5px; color: var(--text-faint); text-align: right; margin-top: 6px; }
 
-  .match-card{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
-  .match-card .card-head{ padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
-  .match-card .competition{ font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text-faint); margin-bottom: 5px; }
-  .match-card .teams-line{ display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .match-card .team-name{ font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; }
-  .match-card .vs{ color: var(--text-faint); font-size: 12.5px; }
-  .match-card .side-info{ text-align: right; flex-shrink: 0; }
-  .match-card .status-badge{ font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--text-dim); }
-  .match-card .status-badge.live{ color: var(--loss); border-color: var(--loss); }
-  .match-card .kickoff{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-dim); margin-top: 6px; }
-  .match-card .chevron{ color: var(--text-faint); font-size: 11px; margin-left: 6px; display: inline-block; transition: transform 0.2s ease; }
-  .match-card.open .chevron{ transform: rotate(180deg); }
+  /* ---------- KPIs ---------- */
+  .kpis{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 28px; }
+  .kpi{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 15px; min-width: 0; }
+  .kpi .label{ font-size: 12px; color: var(--text-faint); }
+  .kpi .value{ font-family: var(--display); font-weight: 600; font-size: 19px; margin-top: 3px; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kpi .value.pos{ color: var(--in); }
+  .kpi .value.neg{ color: var(--out); }
+  .kpi .value.warn{ color: var(--warn); }
+  .kpi .sub{ font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+  @media (max-width: 640px){ .kpis{ grid-template-columns: 1fr 1fr; } }
 
-  .match-detail{ max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 1px solid var(--border); }
-  .match-card.open .match-detail{ max-height: 900px; }
-  .match-detail-inner{ padding: 16px 16px 18px 16px; }
+  .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px){ .grid-2{ grid-template-columns: 1fr; } }
+  .card-title{ display:flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; gap: 8px; }
+  .card-title h3{ font-family: var(--display); font-size: 15px; margin: 0; font-weight: 600; }
+  .link-btn{ background:none; border:none; color: var(--accent); font-size: 12.5px; padding: 0; }
 
-  .detail-block{ margin-bottom: 16px; }
-  .detail-block:last-child{ margin-bottom: 0; }
-  .detail-block h4{ font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; margin: 0 0 8px 0; }
+  .catbar{ margin-bottom: 11px; }
+  .catbar:last-child{ margin-bottom: 0; }
+  .catbar-top{ display:flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; gap: 8px; }
+  .catbar-top .pct{ color: var(--text-faint); font-size: 12px; margin-left: 6px; }
+  .catbar-track{ height: 6px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .catbar-fill{ height: 100%; border-radius: 4px; }
 
-  .form-row{ display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .form-row:last-child{ border-bottom: none; }
-  .result-badge{ font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; width: 19px; height: 19px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; }
-  .result-badge.W{ background: rgba(52,211,153,0.16); color: var(--gain); }
-  .result-badge.L{ background: rgba(248,113,113,0.16); color: var(--loss); }
-  .result-badge.D{ background: rgba(139,150,163,0.16); color: var(--text-dim); }
-  .lineups-empty{ color: var(--text-faint); font-size: 12.5px; font-style: italic; }
+  .months{ display:flex; gap: 6px; align-items: stretch; }
+  .mcol{ flex:1; display:flex; flex-direction: column; align-items: center; min-width: 0; }
+  .mbars{ height: 120px; display:flex; align-items: flex-end; gap: 3px; width: 100%; justify-content: center; }
+  .mbar{ width: min(16px, 40%); border-radius: 4px 4px 0 0; min-height: 2px; }
+  .mbar.in{ background: var(--in); }
+  .mbar.out{ background: var(--out); }
+  .mlabel{ font-size: 12px; color: var(--text-dim); margin-top: 6px; text-transform: capitalize; }
+  .mnet{ font-size: 11.5px; }
+  .mnet.pos{ color: var(--in); } .mnet.neg{ color: var(--out); }
+  .legend{ display:flex; gap: 14px; font-size: 12px; color: var(--text-dim); }
+  .legend i{ display:inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
 
-  .stat-compare-row{ margin-bottom: 12px; }
-  .stat-compare-labels{ display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; margin-bottom: 5px; }
-  .stat-compare-labels .stat-name{ color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; align-self: center; }
-  .stat-compare-bar{ display: flex; height: 6px; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
-  .stat-compare-bar .b1{ background: var(--tennis); }
-  .stat-compare-bar .b2{ background: var(--text-faint); }
-  .player-legend{ display: flex; gap: 16px; margin-bottom: 10px; font-size: 12px; }
-  .player-legend span{ display: flex; align-items: center; gap: 6px; }
-  .player-legend .dot{ width: 8px; height: 8px; border-radius: 50%; }
+  /* ---------- Transaction rows ---------- */
+  .cat-ico{ width: 34px; height: 34px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 16px; flex-shrink: 0; }
+  .tx{ border-bottom: 1px solid var(--border); }
+  .tx:last-child{ border-bottom: none; }
+  .tx-row{ display:flex; align-items:center; gap: 12px; padding: 11px 4px; cursor: pointer; }
+  .tx-main{ flex:1; min-width: 0; }
+  .tx-title{ font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tx-meta{ font-size: 12px; color: var(--text-faint); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tag{ display:inline-block; font-size: 10.5px; color: var(--text-dim); border: 1px solid var(--border); border-radius: 20px; padding: 0 7px; margin-left: 6px; }
+  .tag.late{ color: var(--out); border-color: rgba(248,113,113,.45); }
+  .tag.paused{ color: var(--warn); border-color: rgba(251,191,36,.4); }
+  .tx-amt{ font-family: var(--display); font-weight: 600; font-size: 15px; flex-shrink: 0; }
+  .tx-amt.in{ color: var(--in); }
+  .tx-amt.out{ color: var(--text); }
+  .tx-more{ display:grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+  .tx.open .tx-more{ grid-template-rows: 1fr; }
+  .tx-more > div{ overflow: hidden; }
+  .tx-more-inner{ padding: 0 4px 12px 50px; font-size: 13px; color: var(--text-dim); }
+  .tx-more-inner p{ margin: 0 0 10px; white-space: pre-wrap; }
+  .tx-actions{ display:flex; gap: 8px; }
 
-  .disclaimer{ font-size: 11.5px; color: var(--text-faint); border-left: 2px solid var(--accent); padding: 8px 14px; margin-top: 16px; background: rgba(34,211,238,0.05); }
+  .day-group{ margin-bottom: 14px; }
+  .day-head{ display:flex; justify-content: space-between; font-size: 12.5px; color: var(--text-faint); padding: 0 4px 6px; border-bottom: 1px solid var(--border); }
+  .day-head .dn.pos{ color: var(--in); } .day-head .dn.neg{ color: var(--out); }
 
-  /* ---------- Historique ---------- */
-  .history-item{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
-  .history-head{ display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; }
-  .history-head .h-note{ font-size: 13.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .history-head .h-date{ font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-faint); flex-shrink: 0; }
-  .history-head .h-amount{ font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; flex-shrink: 0; }
-  .history-head .h-chevron{ color: var(--text-faint); font-size: 11px; flex-shrink: 0; transition: transform 0.2s ease; }
-  .history-item.open .h-chevron{ transform: rotate(180deg); }
-  .history-desc{ max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 1px solid var(--border); }
-  .history-item.open .history-desc{ max-height: 400px; }
-  .ledger-entry.open .history-desc{ max-height: 400px; }
-  .history-desc-inner{ padding: 12px 14px; font-size: 13px; color: var(--text-dim); }
+  .filters{ display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; margin: 22px 0 10px; }
+  @media (max-width: 640px){ .filters{ grid-template-columns: 1fr 1fr; } .filters .input:first-child{ grid-column: 1 / -1; } }
+  .filter-sum{ display:flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-dim); margin-bottom: 14px; }
+  .filter-sum b{ font-weight: 600; }
+
+  /* ---------- Récurrents ---------- */
+  .rec{ display:flex; align-items:center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+  .rec:last-child{ border-bottom: none; }
+  .rec.paused{ opacity: .55; }
+  .rec-side{ text-align: right; flex-shrink: 0; }
+  .rec-side .eq{ font-size: 11.5px; color: var(--text-faint); }
+  .rec-actions{ display:flex; gap: 2px; flex-shrink: 0; }
+
+  /* ---------- À venir ---------- */
+  .tl-month{ font-family: var(--display); font-weight: 600; font-size: 14px; color: var(--text-dim); margin: 18px 0 6px; text-transform: capitalize; }
+  .tl-month:first-child{ margin-top: 0; }
+  .tl-item{ display:flex; align-items:center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .tl-date{ width: 38px; text-align: center; flex-shrink: 0; line-height: 1.1; }
+  .tl-date .d{ display:block; font-family: var(--display); font-weight: 700; font-size: 17px; }
+  .tl-date .m{ display:block; font-size: 11px; color: var(--text-faint); }
+  .tl-item.overdue .tl-date .d{ color: var(--out); }
+  .tl-side{ text-align: right; flex-shrink: 0; }
+  .tl-bal{ font-size: 11.5px; color: var(--text-faint); }
+  .tl-bal.neg{ color: var(--out); }
+  .tl-actions{ width: 100%; display:flex; justify-content: flex-end; gap: 6px; padding-left: 50px; }
 
   /* ---------- Calendrier ---------- */
-  .cal-grid{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .cal-weekday{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); text-align: center; padding-bottom: 6px; letter-spacing: 0.03em; }
-  .cal-day{
-    min-height: 68px; border-radius: 10px; padding: 8px 6px; display: flex; flex-direction: column;
-    justify-content: space-between; cursor: pointer; border: 1px solid var(--border); transition: transform 0.1s ease, border-color 0.15s ease;
-    background: var(--surface-2);
-  }
-  .cal-day:not(.empty):hover{ transform: translateY(-2px); border-color: var(--text-faint); }
-  .cal-day.empty{ background: none; border-color: transparent; cursor: default; }
-  .cal-day .d-num{ font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--text-dim); font-size: 14px; }
-  .cal-day .d-amt{ font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 700; text-align: right; }
-  .cal-day.pos{ background: rgba(52,211,153,0.16); border-color: rgba(52,211,153,0.3); }
-  .cal-day.pos .d-num{ color: var(--text); }
-  .cal-day.pos .d-amt{ color: var(--gain); }
-  .cal-day.neg{ background: rgba(248,113,113,0.16); border-color: rgba(248,113,113,0.3); }
-  .cal-day.neg .d-num{ color: var(--text); }
-  .cal-day.neg .d-amt{ color: var(--loss); }
-  .cal-day.selected{ border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-  .cal-day.today .d-num{ color: var(--accent); }
-  .cal-detail{ margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
-  .cal-detail-title{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 12px; text-transform: capitalize; }
+  .cal-head{ display:flex; align-items:center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+  .cal-label{ font-family: var(--display); font-weight: 700; font-size: 16px; text-transform: capitalize; }
+  .cal-sum{ display:flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-dim); margin-bottom: 12px; justify-content: center; }
+  .cal-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal-wd{ font-size: 11.5px; color: var(--text-faint); text-align: center; padding-bottom: 4px; }
+  .cal-day{ min-height: 64px; border-radius: 10px; padding: 7px 6px; display:flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; text-align: left; color: var(--text); }
+  .cal-day.blank{ background:none; border-color: transparent; cursor: default; }
+  .cal-day .dn{ font-family: var(--display); font-weight: 600; font-size: 13.5px; color: var(--text-dim); }
+  .cal-day .da{ font-size: 11.5px; font-weight: 600; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cal-day.pos{ background: rgba(52,211,153,.13); border-color: rgba(52,211,153,.3); }
+  .cal-day.pos .da{ color: var(--in); }
+  .cal-day.neg{ background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.28); }
+  .cal-day.neg .da{ color: var(--out); }
+  .cal-day.fut{ border-style: dashed; border-color: rgba(251,191,36,.45); }
+  .cal-day.fut .da{ color: var(--warn); font-weight: 500; }
+  .cal-day.today .dn{ color: var(--accent); }
+  .cal-day.sel{ box-shadow: 0 0 0 2px var(--accent); }
+  .cal-day:not(.blank):hover{ border-color: var(--text-faint); }
+  @media (max-width: 480px){ .cal-day{ min-height: 52px; padding: 5px 4px; } .cal-day .da{ font-size: 10px; } }
+  .cal-detail{ margin-top: 16px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .cal-detail h3{ font-family: var(--display); font-size: 15px; margin: 0 0 6px; }
+  .cal-detail h3::first-letter{ text-transform: uppercase; }
 
-  footer{ text-align: center; color: var(--text-faint); font-size: 11.5px; margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border); }
+  /* ---------- Réglages ---------- */
+  .set-status{ font-size: 12.5px; color: var(--text-dim); margin-top: 10px; }
+  .set-status.err{ color: var(--out); }
+  .set-status.ok{ color: var(--in); }
 
-  @media (max-width: 560px){
-    .chart-top .figure{ font-size: 32px; }
-    .kpi-row{ grid-template-columns: 1fr 1fr; }
-  }
-  :focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* ---------- Onboarding ---------- */
+  .onboarding{ padding: 26px 22px; }
+  .onboarding h2{ font-size: 22px; margin-bottom: 6px; }
+
+  /* ---------- FAB & toast ---------- */
+  .fab{ position: fixed; right: 20px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 54px; height: 54px; border-radius: 50%; border: none; background: var(--accent); color: #052229; font-size: 28px; line-height: 1; box-shadow: 0 8px 24px rgba(34,211,238,.25); z-index: 20; }
+  .fab:hover{ filter: brightness(1.1); }
+  .toast{ position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; display:flex; gap: 14px; align-items:center; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; z-index: 30; max-width: calc(100% - 110px); }
+  .toast.show{ opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast button{ background:none; border:none; color: var(--accent); font-weight: 600; padding: 0; }
+
+  footer{ text-align:center; color: var(--text-faint); font-size: 12px; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--border); }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header class="masthead">
-    <h1>Suivi</h1>
-    <span class="badge-live" id="today-badge"></span>
+    <div>
+      <h1>Mes comptes</h1>
+      <div class="sub" id="today-label"></div>
+    </div>
+    <button class="sync-pill" id="sync-pill" data-s="off" type="button" title="Synchronisation"><span class="sync-dot"></span><span id="sync-text">Local</span></button>
   </header>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="registre">Registre</button>
-    <button class="tab-btn" data-tab="matchs">Matchs du jour</button>
-    <button class="tab-btn" data-tab="carnet">Carnet</button>
-    <button class="tab-btn" data-tab="historique">Historique</button>
-    <button class="tab-btn" data-tab="calendrier">Calendrier</button>
-  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="apercu" type="button">Aperçu</button>
+    <button class="tab-btn" data-tab="operations" type="button">Opérations</button>
+    <button class="tab-btn" data-tab="recurrents" type="button">Fixes & abonnements</button>
+    <button class="tab-btn" data-tab="avenir" type="button">À venir</button>
+    <button class="tab-btn" data-tab="calendrier" type="button">Calendrier</button>
+    <button class="tab-btn" data-tab="reglages" type="button">Réglages</button>
+  </nav>
 
-  <!-- ============ VIEW: REGISTRE ============ -->
-  <div class="view active" id="view-registre">
+  <!-- ================= APERÇU ================= -->
+  <div class="view active" id="view-apercu">
+    <div class="panel onboarding" id="onboarding" hidden>
+      <h2>Combien as-tu sur ton compte aujourd'hui ?</h2>
+      <p class="note">C'est ton point de départ. Ensuite tu ajoutes tes dépenses, ton salaire et tes abonnements, et le solde se met à jour tout seul.</p>
+      <div class="row">
+        <div class="field" style="max-width:240px;"><label for="ob-balance">Solde actuel (€)</label><input id="ob-balance" type="text" inputmode="decimal" placeholder="ex. 1 250,00"></div>
+        <button class="btn" id="ob-start" type="button">Commencer</button>
+      </div>
+    </div>
 
-    <section id="setup-section" style="margin-top:20px;">
-      <div class="panel" id="setup-panel"></div>
-    </section>
-
-    <div id="dashboard-wrap" style="display:none;">
-      <div class="chart-card">
-        <div class="chart-top">
+    <div id="dash" hidden>
+      <div class="hero">
+        <div class="hero-top">
           <div>
-            <div class="label">Évolution des paris</div>
-            <div class="figure" id="balance-figure">0 €</div>
-            <div class="delta" id="balance-delta"></div>
+            <div class="lbl">Solde actuel</div>
+            <div class="figure" id="bal-figure">0,00 €</div>
+            <div class="delta" id="bal-delta"></div>
           </div>
-          <div class="range-tabs" id="range-tabs">
-            <button class="range-btn" data-range="7">7 j</button>
-            <button class="range-btn" data-range="30">30 j</button>
-            <button class="range-btn active" data-range="all">Tout</button>
-            <button class="range-btn" data-range="custom">Perso</button>
-          </div>
-        </div>
-        <div class="custom-range-row" id="custom-range-row" style="display:none;">
-          <input type="date" id="custom-from">
-          <span>→</span>
-          <input type="date" id="custom-to">
-        </div>
-        <div class="chart-canvas-wrap" id="chart-wrap">
-          <div class="zoom-reset" id="zoom-reset" style="display:none;">Réinitialiser le zoom</div>
-          <div class="chart-tooltip" id="chart-tooltip"><div class="tt-date" id="tt-date"></div><div id="tt-val"></div></div>
-        </div>
-        <div class="zoom-hint">Molette pour zoomer · glisser pour déplacer · pincer sur mobile</div>
-      </div>
-
-      <div class="kpi-row">
-        <div class="kpi"><div class="label">Mise de départ</div><div class="value" id="stat-depart">—</div></div>
-        <div class="kpi"><div class="label">Gains cumulés</div><div class="value gain" id="stat-gains">—</div></div>
-        <div class="kpi"><div class="label">Pertes cumulées</div><div class="value loss" id="stat-pertes">—</div></div>
-        <div class="kpi"><div class="label">Total retiré</div><div class="value" id="stat-retraits">—</div></div>
-        <div class="kpi"><div class="label">Bénéfice réel</div><div class="value" id="stat-benefice">—</div></div>
-        <div class="kpi"><div class="label">Total misé (tous paris)</div><div class="value" id="stat-total-mise">—</div></div>
-        <div class="kpi"><div class="label">Misé, en attente</div><div class="value" id="stat-mise-attente" style="color:var(--tennis);">—</div></div>
-        <div class="kpi"><div class="label">Gain possible (si paris gagnés)</div><div class="value gain" id="stat-gain-potentiel">—</div></div>
-      </div>
-
-      <section id="entry-section">
-        <h2>Ajouter un résultat</h2>
-        <div class="section-note">Note ton gain ou ta perte du jour. La courbe et les stats se recalculent tout seuls.</div>
-        <div class="panel">
-          <div class="field-row">
-            <div class="field" style="max-width:150px;"><label for="entry-date">Date</label><input type="date" id="entry-date"></div>
-            <div class="field" style="max-width:110px;"><label for="entry-type">Type</label>
-              <select id="entry-type"><option value="gain">Gain</option><option value="perte">Perte</option><option value="retrait">Retrait</option></select>
+          <div class="range-row">
+            <div class="seg" id="range-seg" data-value="90">
+              <button type="button" data-v="30">30 j</button>
+              <button type="button" data-v="90" class="active">90 j</button>
+              <button type="button" data-v="365">1 an</button>
+              <button type="button" data-v="all">Tout</button>
+              <button type="button" data-v="custom">Perso</button>
             </div>
-            <div class="field" style="max-width:130px;"><label for="entry-amount">Montant (€)</label><input type="number" id="entry-amount" min="0" step="0.01" placeholder="0.00"></div>
-            <div class="field" style="min-width:200px;"><label for="entry-note">Titre / note (optionnel)</label><input type="text" id="entry-note" placeholder="ex. double foot + tennis"></div>
-            <button id="add-entry-btn">Ajouter</button>
-          </div>
-          <div class="field-row" style="margin-top:10px;">
-            <div class="field"><label for="entry-description">Description (optionnel)</label><textarea id="entry-description" placeholder="détails, contexte, ce que tu retiens de cette journée..."></textarea></div>
+            <div class="custom-range" id="custom-range" hidden>
+              <input type="date" id="c-from" aria-label="Du"><span>au</span><input type="date" id="c-to" aria-label="Au">
+            </div>
           </div>
         </div>
+        <div class="chart-wrap" id="chart-wrap">
+          <button class="btn ghost small zoom-reset" id="zoom-reset" type="button" hidden>Réinitialiser le zoom</button>
+          <svg id="chart" viewBox="0 0 760 240" aria-label="Évolution du solde"></svg>
+          <div class="tooltip" id="tooltip"><div class="tt-d" id="tt-d"></div><div class="tt-v" id="tt-v"></div><div class="tt-m" id="tt-m"></div></div>
+        </div>
+        <div class="chart-hint">Molette ou pincement pour zoomer, glisser pour se déplacer</div>
+      </div>
 
-        <div class="ledger-list" id="ledger-rows" style="margin-top:6px;"></div>
+      <div class="kpis">
+        <div class="kpi"><div class="label">Revenus ce mois</div><div class="value pos" id="k-in">—</div><div class="sub" id="k-in-sub">&nbsp;</div></div>
+        <div class="kpi"><div class="label">Dépenses ce mois</div><div class="value neg" id="k-out">—</div><div class="sub" id="k-out-sub">&nbsp;</div></div>
+        <div class="kpi"><div class="label">Mis de côté ce mois</div><div class="value" id="k-net">—</div><div class="sub" id="k-net-sub">&nbsp;</div></div>
+        <div class="kpi"><div class="label">Charges fixes par mois</div><div class="value" id="k-fixed">—</div><div class="sub" id="k-fixed-sub">&nbsp;</div></div>
+        <div class="kpi"><div class="label">Reste à payer ce mois</div><div class="value warn" id="k-topay">—</div><div class="sub" id="k-topay-sub">&nbsp;</div></div>
+        <div class="kpi"><div class="label">Solde prévu fin du mois</div><div class="value" id="k-proj">—</div><div class="sub">en comptant tout ce qui est prévu</div></div>
+      </div>
+
+      <section class="grid-2">
+        <div class="panel">
+          <div class="card-title"><h3>Où part ton argent ce mois</h3></div>
+          <div id="cat-bars"></div>
+        </div>
+        <div class="panel">
+          <div class="card-title"><h3>Prochaines échéances</h3><button class="link-btn" type="button" data-goto="avenir">Tout voir</button></div>
+          <div id="next-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="card-title"><h3>Les 6 derniers mois</h3><div class="legend"><span><i style="background:var(--in)"></i>Revenus</span><span><i style="background:var(--out)"></i>Dépenses</span></div></div>
+        <div class="months" id="months"></div>
       </section>
     </div>
   </div>
 
-  <!-- ============ VIEW: CARNET ============ -->
-  <div class="view" id="view-carnet">
-    <section style="margin-top:20px;">
-      <h2>Mon carnet perso</h2>
-      <div class="section-note">Les cotes que tu notes toi-même : match, cote proposée, mise envisagée, ton analyse. Rien n'est généré automatiquement ici.</div>
+  <!-- ================= OPÉRATIONS ================= -->
+  <div class="view" id="view-operations">
+    <section>
+      <h2 id="tx-form-title">Ajouter une opération</h2>
+      <p class="note">Une dépense ou une rentrée d'argent. Si tu mets une date future, elle part dans « À venir ».</p>
+      <div class="panel" id="tx-form">
+        <div class="row">
+          <div class="seg" id="tx-kind" data-value="out"><button type="button" data-v="out" class="active">Dépense</button><button type="button" data-v="in">Revenu</button></div>
+        </div>
+        <div class="row">
+          <div class="field" style="max-width:150px;"><label for="tx-amount">Montant (€)</label><input id="tx-amount" type="text" inputmode="decimal" placeholder="0,00"></div>
+          <div class="field" style="max-width:160px;"><label for="tx-date">Date</label><input id="tx-date" type="date"></div>
+          <div class="field" style="max-width:200px;"><label for="tx-cat">Catégorie</label><select id="tx-cat"></select></div>
+          <div class="field" style="min-width:180px;"><label for="tx-title">Libellé</label><input id="tx-title" type="text" placeholder="ex. Carrefour, essence…"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="tx-desc">Note (optionnel)</label><textarea id="tx-desc" rows="1" placeholder="détails, remboursement attendu…"></textarea></div>
+        </div>
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn ghost" id="tx-cancel" type="button" hidden>Annuler</button>
+          <button class="btn" id="tx-submit" type="button">Ajouter</button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <input class="input" id="f-search" type="search" placeholder="Rechercher…" aria-label="Rechercher">
+        <select class="input" id="f-month" aria-label="Mois"></select>
+        <select class="input" id="f-kind" aria-label="Type"><option value="">Tout</option><option value="out">Dépenses</option><option value="in">Revenus</option></select>
+        <select class="input" id="f-cat" aria-label="Catégorie"></select>
+      </div>
+      <div class="filter-sum" id="f-sum"></div>
+      <div id="tx-list"></div>
+    </section>
+  </div>
+
+  <!-- ================= RÉCURRENTS ================= -->
+  <div class="view" id="view-recurrents">
+    <div class="kpis" style="margin-top:0;">
+      <div class="kpi"><div class="label">Revenus fixes par mois</div><div class="value pos" id="r-in">—</div></div>
+      <div class="kpi"><div class="label">Charges fixes par mois</div><div class="value neg" id="r-out">—</div></div>
+      <div class="kpi"><div class="label">Reste après charges fixes</div><div class="value" id="r-left">—</div></div>
+    </div>
+
+    <section>
+      <h2 id="rec-form-title">Ajouter un salaire, un abonnement ou une charge fixe</h2>
+      <p class="note">À chaque échéance, l'opération est enregistrée automatiquement dans tes comptes. Tu peux mettre en pause à tout moment.</p>
       <div class="panel">
-        <div class="field-row">
-          <div class="field" style="max-width:110px;"><label for="match-sport">Sport</label>
-            <select id="match-sport"><option value="Football">Football</option><option value="Tennis">Tennis</option><option value="Autre">Autre</option></select>
+        <div class="row">
+          <div class="seg" id="rec-kind" data-value="out"><button type="button" data-v="out" class="active">Dépense</button><button type="button" data-v="in">Revenu</button></div>
+        </div>
+        <div class="row">
+          <div class="field" style="min-width:180px;"><label for="rec-title">Nom</label><input id="rec-title" type="text" placeholder="ex. Netflix, Loyer, Salaire"></div>
+          <div class="field" style="max-width:140px;"><label for="rec-amount">Montant (€)</label><input id="rec-amount" type="text" inputmode="decimal" placeholder="0,00"></div>
+          <div class="field" style="max-width:190px;"><label for="rec-cat">Catégorie</label><select id="rec-cat"></select></div>
+        </div>
+        <div class="row">
+          <div class="field" style="max-width:160px;"><label for="rec-freq">Fréquence</label>
+            <select id="rec-freq"><option value="monthly">Tous les mois</option><option value="weekly">Toutes les semaines</option><option value="yearly">Tous les ans</option></select>
           </div>
-          <div class="field" style="max-width:100px;"><label for="match-cote">Cote finale</label><input type="number" id="match-cote" min="1.01" step="0.01" placeholder="1.85"></div>
-          <div class="field" style="max-width:110px;"><label for="match-mise">Mise envisagée (€)</label><input type="number" id="match-mise" min="0" step="0.5" placeholder="10"></div>
-        </div>
-        <div class="field-row" style="margin-top:10px; align-items:flex-start;">
-          <div class="field" style="flex:1;">
-            <label>Match(s) — ajoute-en plusieurs pour un combiné</label>
-            <div id="match-teams-list" style="display:flex; flex-direction:column; gap:8px;">
-              <div class="field-row" style="gap:6px;">
-                <input type="text" class="match-team-input" placeholder="ex. PSG — OM" style="flex:1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
-              </div>
-            </div>
-            <button type="button" class="ghost small" id="add-match-row-btn" style="margin-top:8px;">+ Ajouter un match</button>
+          <div class="field" style="max-width:180px;"><label for="rec-next">Prochaine échéance</label><input id="rec-next" type="date"></div>
+          <div class="row" style="flex:1; justify-content:flex-end; margin-top:0;">
+            <button class="btn ghost" id="rec-cancel" type="button" hidden>Annuler</button>
+            <button class="btn" id="rec-submit" type="button">Ajouter</button>
           </div>
         </div>
-        <div class="field-row" style="margin-top:12px;">
-          <div class="field"><label for="match-note">Ton analyse</label><textarea id="match-note" placeholder="forme récente, absences, ton raisonnement..."></textarea></div>
-        </div>
-        <div class="field-row" style="margin-top:12px; justify-content:flex-end;"><button id="add-match-btn">Ajouter au carnet</button></div>
       </div>
-      <div id="match-list" style="margin-top:14px;"></div>
+    </section>
+
+    <section>
+      <h2>Revenus fixes</h2>
+      <div class="panel" style="padding:6px 12px;"><div id="rec-in-list"></div></div>
+    </section>
+    <section>
+      <h2>Abonnements & charges fixes</h2>
+      <div class="panel" style="padding:6px 12px;"><div id="rec-out-list"></div></div>
     </section>
   </div>
 
-  <!-- ============ VIEW: MATCHS ============ -->
-  <div class="view" id="view-matchs">
-    <div class="snapshot-note" id="snapshot-note" style="margin-top:20px;"></div>
-
-    <div class="sport-group">
-      <div class="sport-group-title"><span class="sport-dot football"></span>Football</div>
-      <div id="football-list"></div>
+  <!-- ================= À VENIR ================= -->
+  <div class="view" id="view-avenir">
+    <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h2 style="margin:0;">Ce qui arrive</h2>
+      <div class="seg" id="hz-seg" data-value="30"><button type="button" data-v="30" class="active">30 j</button><button type="button" data-v="90">3 mois</button><button type="button" data-v="365">1 an</button></div>
+    </div>
+    <div class="kpis" style="margin-top:0;">
+      <div class="kpi"><div class="label">À payer</div><div class="value warn" id="u-pay">—</div></div>
+      <div class="kpi"><div class="label">À recevoir</div><div class="value pos" id="u-get">—</div></div>
+      <div class="kpi"><div class="label">Solde prévu</div><div class="value" id="u-proj">—</div><div class="sub" id="u-proj-sub">&nbsp;</div></div>
     </div>
 
-    <div class="sport-group">
-      <div class="sport-group-title"><span class="sport-dot tennis"></span>Tennis</div>
-      <div id="tennis-list"></div>
-    </div>
+    <section>
+      <h2>Prévoir une dépense ou une rentrée</h2>
+      <p class="note">Pour les choses ponctuelles : une facture à venir, un cadeau, un remboursement attendu. Marque-la payée le moment venu.</p>
+      <div class="panel">
+        <div class="row">
+          <div class="seg" id="pl-kind" data-value="out"><button type="button" data-v="out" class="active">Dépense</button><button type="button" data-v="in">Revenu</button></div>
+        </div>
+        <div class="row">
+          <div class="field" style="min-width:180px;"><label for="pl-title">Libellé</label><input id="pl-title" type="text" placeholder="ex. Assurance auto, anniversaire"></div>
+          <div class="field" style="max-width:140px;"><label for="pl-amount">Montant (€)</label><input id="pl-amount" type="text" inputmode="decimal" placeholder="0,00"></div>
+          <div class="field" style="max-width:160px;"><label for="pl-date">Date prévue</label><input id="pl-date" type="date"></div>
+          <div class="field" style="max-width:190px;"><label for="pl-cat">Catégorie</label><select id="pl-cat"></select></div>
+          <button class="btn" id="pl-submit" type="button">Prévoir</button>
+        </div>
+      </div>
+    </section>
 
-    <div class="disclaimer">
-      Toutes les données ci-dessus sont réelles (scores, statistiques de match, historique récent) — aucune n'est un pronostic généré. C'est une photo prise à un instant donné ; demande-moi de rafraîchir si tu veux les derniers chiffres.
-    </div>
+    <div class="panel" style="padding:12px 14px;"><div id="timeline"></div></div>
   </div>
 
-  <!-- ============ VIEW: CALENDRIER ============ -->
+  <!-- ================= CALENDRIER ================= -->
   <div class="view" id="view-calendrier">
-    <section style="margin-top:20px;">
-      <h2>Calendrier des résultats</h2>
-      <div class="section-note">Ton résultat net (gains − pertes) jour par jour. Les retraits et mises en attente ne comptent pas ici, seulement les résultats réels.</div>
-      <div class="panel" style="padding:16px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-          <button class="ghost small" id="cal-prev">← Précédent</button>
-          <div id="cal-label" style="font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:15px;"></div>
-          <button class="ghost small" id="cal-next">Suivant →</button>
+    <div class="panel">
+      <div class="cal-head">
+        <button class="btn ghost small" id="cal-prev" type="button">Précédent</button>
+        <div class="cal-label" id="cal-label"></div>
+        <button class="btn ghost small" id="cal-next" type="button">Suivant</button>
+      </div>
+      <div class="cal-sum" id="cal-sum"></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-detail" id="cal-detail" hidden></div>
+    </div>
+    <p class="note" style="margin-top:10px;">Vert : jour positif. Rouge : jour négatif. Pointillés jaunes : échéances prévues.</p>
+  </div>
+
+  <!-- ================= RÉGLAGES ================= -->
+  <div class="view" id="view-reglages">
+    <section>
+      <h2>Point de départ</h2>
+      <p class="note">Le solde de ton compte avant la première opération que tu as enregistrée.</p>
+      <div class="panel">
+        <div class="row">
+          <div class="field" style="max-width:200px;"><label for="s-balance">Solde de départ (€)</label><input id="s-balance" type="text" inputmode="decimal"></div>
+          <div class="field" style="max-width:180px;"><label for="s-date">Date de départ</label><input id="s-date" type="date"></div>
+          <button class="btn" id="s-save" type="button">Enregistrer</button>
         </div>
-        <div id="cal-grid" class="cal-grid"></div>
-        <div id="cal-detail" class="cal-detail" style="display:none;"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Synchronisation entre appareils</h2>
+      <p class="note">Via ton Worker Cloudflare. Le mot de passe est gardé uniquement sur cet appareil, il n'est plus écrit dans le code du site.</p>
+      <div class="panel">
+        <div class="row">
+          <div class="field" style="min-width:240px;"><label for="s-url">Adresse du Worker</label><input id="s-url" type="url" placeholder="https://…workers.dev"></div>
+          <div class="field" style="max-width:220px;"><label for="s-secret">Mot de passe (APP_SECRET)</label><input id="s-secret" type="password" autocomplete="off"></div>
+          <button class="btn" id="s-sync" type="button">Connecter</button>
+        </div>
+        <div class="set-status" id="s-status"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Sauvegarde</h2>
+      <p class="note">Télécharge une copie de toutes tes données, ou restaure une copie précédente.</p>
+      <div class="panel">
+        <div class="row">
+          <button class="btn ghost" id="s-export" type="button">Télécharger une sauvegarde</button>
+          <button class="btn ghost" id="s-import" type="button">Restaurer une sauvegarde</button>
+          <input type="file" id="s-file" accept="application/json,.json" hidden>
+          <div style="flex:1"></div>
+          <button class="btn danger" id="s-reset" type="button">Tout effacer</button>
+        </div>
       </div>
     </section>
   </div>
 
-  <!-- ============ VIEW: HISTORIQUE ============ -->
-  <div class="view" id="view-historique">
-    <section style="margin-top:20px;">
-      <h2>Historique</h2>
-      <div class="section-note">Retrouve tous tes mouvements. Clique sur une ligne pour voir la description que tu as ajoutée.</div>
-      <div class="panel" style="padding:10px 12px;">
-        <input type="text" id="history-search" placeholder="Rechercher par titre..." style="width:100%; background:none; border:none; color:var(--text); font-family:'IBM Plex Mono', monospace; font-size:14px; outline:none;">
-      </div>
-      <div id="history-list" style="margin-top:14px;"></div>
-    </section>
-  </div>
-
-  <footer>Tes données restent sur cet appareil, dans ton espace personnel.</footer>
+  <footer>Tes données restent sur cet appareil, et sur ton Worker si tu actives la synchronisation.</footer>
 </div>
+
+<button class="fab" id="fab" type="button" title="Ajouter une opération" aria-label="Ajouter une opération">+</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
-  const fmtEUR = (n) => (n<0?'\u2212':'') + Math.abs(n).toLocaleString('fr-FR',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' \u20ac';
-  const escapeHtml = (str) => { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; };
+'use strict';
 
-  document.getElementById('today-badge').textContent = new Date().toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' });
+/* ================= Helpers ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseD = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const today = () => ymd(new Date());
+const addDays = (s,n) => { const d = parseD(s); d.setDate(d.getDate()+n); return ymd(d); };
+const endOfMonth = s => { const d = parseD(s); return ymd(new Date(d.getFullYear(), d.getMonth()+1, 0)); };
+const monthKey = s => s.slice(0,7);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const round2 = n => Math.round(n*100)/100;
+const parseAmount = v => { const n = parseFloat(String(v).replace(/[\s\u00a0\u202f]/g,'').replace(',','.')); return isNaN(n) ? NaN : round2(n); };
+const money = (n, {sign=false, dec=2} = {}) => {
+  const a = Math.abs(n).toLocaleString('fr-FR',{minimumFractionDigits:dec, maximumFractionDigits:dec}) + '\u00a0€';
+  if(n < -0.004) return '\u2212' + a;
+  return (sign && n > 0.004 ? '+' : '') + a;
+};
+const fmtDay = (s, o={day:'numeric', month:'short'}) => parseD(s).toLocaleDateString('fr-FR', o);
+const monthLabel = mk => { const [y,m] = mk.split('-').map(Number); return new Date(y, m-1, 1).toLocaleDateString('fr-FR',{month:'long', year:'numeric'}); };
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const sum = (arr, f) => arr.reduce((s,x) => s + f(x), 0);
 
-  /* ================= TABS ================= */
-  document.querySelectorAll('.tab-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('view-' + btn.dataset.tab).classList.add('active');
-    });
+/* ================= Catégories ================= */
+const CATS = {
+  out: [
+    {id:'logement', label:'Logement', emoji:'🏠', color:'#60a5fa'},
+    {id:'courses', label:'Courses', emoji:'🛒', color:'#34d399'},
+    {id:'transport', label:'Transport', emoji:'🚗', color:'#fbbf24'},
+    {id:'resto', label:'Restos & sorties', emoji:'🍽️', color:'#f472b6'},
+    {id:'loisirs', label:'Loisirs', emoji:'🎮', color:'#a78bfa'},
+    {id:'abonnements', label:'Abonnements', emoji:'🔁', color:'#22d3ee'},
+    {id:'factures', label:'Factures', emoji:'🧾', color:'#fb923c'},
+    {id:'sante', label:'Santé', emoji:'💊', color:'#f87171'},
+    {id:'shopping', label:'Shopping', emoji:'🛍️', color:'#e879f9'},
+    {id:'epargne', label:'Épargne', emoji:'🏦', color:'#94a3b8'},
+    {id:'autre', label:'Autre', emoji:'📦', color:'#64748b'}
+  ],
+  in: [
+    {id:'salaire', label:'Salaire', emoji:'💼', color:'#34d399'},
+    {id:'prime', label:'Prime', emoji:'🎁', color:'#a3e635'},
+    {id:'rembourse', label:'Remboursement', emoji:'↩️', color:'#22d3ee'},
+    {id:'vente', label:'Vente', emoji:'🏷️', color:'#fbbf24'},
+    {id:'autre_in', label:'Autre revenu', emoji:'💰', color:'#94a3b8'}
+  ]
+};
+const ALL_CATS = [...CATS.out, ...CATS.in];
+const cat = id => ALL_CATS.find(c => c.id === id) || {id:'autre', label:'Autre', emoji:'📦', color:'#64748b'};
+const FREQ = { monthly:'Mensuel', weekly:'Hebdo', yearly:'Annuel' };
+const monthlyEq = r => r.freq === 'weekly' ? r.amount*52/12 : (r.freq === 'yearly' ? r.amount/12 : r.amount);
+const signed = t => t.kind === 'in' ? t.amount : -t.amount;
+const icon = c => `<div class="cat-ico" style="background:${c.color}22;">${c.emoji}</div>`;
+
+function fillCats(sel, kind, selected){
+  sel.innerHTML = CATS[kind].map(c => `<option value="${c.id}">${c.emoji} ${esc(c.label)}</option>`).join('');
+  if(selected && CATS[kind].some(c => c.id === selected)) sel.value = selected;
+}
+
+/* ================= État & stockage ================= */
+const LS_KEY = 'finances:data', LS_SYNC = 'finances:sync', LS_TAB = 'finances:tab';
+const DEFAULT_WORKER = 'https://parisportif-api.maxence-sallepierret2.workers.dev';
+
+const emptyState = () => ({ schema:'finances-v1', updatedAt:0, settings:{ startBalance:null, startDate:today() }, transactions:[], recurring:[], planned:[] });
+const normalize = s => ({
+  ...emptyState(), ...s,
+  settings: { ...emptyState().settings, ...(s.settings || {}) },
+  transactions: Array.isArray(s.transactions) ? s.transactions : [],
+  recurring: Array.isArray(s.recurring) ? s.recurring : [],
+  planned: Array.isArray(s.planned) ? s.planned : []
+});
+
+let state = emptyState();
+let syncCfg = { url: DEFAULT_WORKER, secret: '' };
+
+function loadLocal(){
+  try{ const raw = localStorage.getItem(LS_KEY); if(raw){ const s = JSON.parse(raw); if(s && s.schema === 'finances-v1') state = normalize(s); } }catch(e){}
+  try{ const raw = localStorage.getItem(LS_SYNC); if(raw) syncCfg = { ...syncCfg, ...JSON.parse(raw) }; }catch(e){}
+}
+function persistLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ console.error(e); } }
+function persistSync(){ try{ localStorage.setItem(LS_SYNC, JSON.stringify(syncCfg)); }catch(e){} }
+
+/* ---- Synchronisation Worker ---- */
+const apiUrl = () => (syncCfg.url || '').replace(/\/+$/,'') + '/api/data';
+function setSync(s, detail){
+  const pill = $('sync-pill'); pill.dataset.s = s;
+  $('sync-text').textContent = { off:'Local', pending:'Synchro…', ok:'Synchronisé', err:'Erreur synchro' }[s];
+  const st = $('s-status');
+  st.className = 'set-status' + (s === 'err' ? ' err' : s === 'ok' ? ' ok' : '');
+  st.textContent = detail || { off:'Synchronisation désactivée : renseigne l\'adresse et le mot de passe.', pending:'Synchronisation en cours…', ok:'Connecté, tes données sont synchronisées.', err:'La synchronisation a échoué.' }[s];
+}
+async function pushRemote(){
+  if(!syncCfg.url || !syncCfg.secret){ setSync('off'); return; }
+  setSync('pending');
+  try{
+    const r = await fetch(apiUrl(), { method:'POST', headers:{ 'Content-Type':'application/json', 'X-App-Secret':syncCfg.secret }, body: JSON.stringify(state) });
+    if(r.ok) setSync('ok');
+    else setSync('err', r.status === 401 || r.status === 403 ? 'Mot de passe refusé par le Worker.' : `Le Worker a répondu ${r.status}.`);
+  }catch(e){ setSync('err', 'Worker injoignable. Tes données restent enregistrées sur cet appareil.'); }
+}
+async function pullRemote(){
+  if(!syncCfg.url || !syncCfg.secret){ setSync('off'); return false; }
+  setSync('pending');
+  try{
+    const r = await fetch(apiUrl(), { headers:{ 'X-App-Secret':syncCfg.secret } });
+    if(!r.ok){ setSync('err', r.status === 401 || r.status === 403 ? 'Mot de passe refusé par le Worker.' : `Le Worker a répondu ${r.status}.`); return false; }
+    const remote = await r.json().catch(() => null);
+    if(remote && remote.schema === 'finances-v1'){
+      if((remote.updatedAt||0) > (state.updatedAt||0)){ state = normalize(remote); persistLocal(); setSync('ok'); return true; }
+      if((remote.updatedAt||0) < (state.updatedAt||0)) pushRemote(); else setSync('ok');
+      return false;
+    }
+    if(remote && (remote.entries || remote.manualMatches)){
+      setSync('ok', 'Connecté. Le serveur contient encore tes anciennes données de paris : elles seront remplacées à ta prochaine modification.');
+      return false;
+    }
+    if(state.updatedAt) pushRemote(); else setSync('ok');
+    return false;
+  }catch(e){ setSync('err', 'Worker injoignable. Tes données restent enregistrées sur cet appareil.'); return false; }
+}
+
+let pushTimer = null;
+function commit(){
+  processRecurring();
+  state.updatedAt = Date.now();
+  persistLocal();
+  renderAll();
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushRemote, 500);
+}
+
+/* ================= Logique métier ================= */
+function advance(r){
+  const d = parseD(r.nextDate);
+  if(r.freq === 'weekly'){ d.setDate(d.getDate()+7); return ymd(d); }
+  const step = r.freq === 'yearly' ? 12 : 1;
+  const anchor = r.day || d.getDate();
+  const y = d.getFullYear(), m = d.getMonth() + step;
+  const last = new Date(y, m+1, 0).getDate();
+  return ymd(new Date(y, m, Math.min(anchor, last)));
+}
+
+// Enregistre automatiquement les échéances arrivées (aujourd'hui ou avant)
+function processRecurring(){
+  const t0 = today(); let n = 0;
+  state.recurring.forEach(r => {
+    if(!r.active) return;
+    let guard = 0;
+    while(r.nextDate <= t0 && guard++ < 600){
+      state.transactions.push({ id:uid(), createdAt:Date.now(), date:r.nextDate, kind:r.kind, amount:r.amount, category:r.category, title:r.title, description:'', source:{ type:'recurring', id:r.id } });
+      r.nextDate = advance(r); n++;
+    }
   });
+  return n;
+}
 
-  /* ================= REGISTRE (bankroll) ================= */
-  let config = null;
-  let entries = [];
-  let manualMatches = [];
-  let currentRange = 'all';
-  let customFrom = null;
-  let customTo = null;
+const currentBalance = () => (state.settings.startBalance || 0) + sum(state.transactions, signed);
 
-  // Mot de passe perso qui protège tes données — doit être identique au secret APP_SECRET
-  // configuré dans ton Worker Cloudflare. Change cette valeur avant de mettre en ligne.
-  const APP_SECRET = "M@xyoarom1806.";
+function monthStats(mk){
+  let inc = 0, out = 0;
+  state.transactions.forEach(t => { if(monthKey(t.date) !== mk) return; if(t.kind === 'in') inc += t.amount; else out += t.amount; });
+  return { inc, out };
+}
 
-  async function loadAll(){
-    // 1. Charge d'abord depuis le cache local (rapide, marche hors-ligne)
-    try{ const c = localStorage.getItem('bankroll:config'); config = c ? JSON.parse(c) : null; }catch(e){ config = null; }
-    try{ const e = localStorage.getItem('bankroll:entries'); entries = e ? JSON.parse(e) : []; }catch(e){ entries = []; }
-    try{ const m = localStorage.getItem('bankroll:matches'); manualMatches = m ? JSON.parse(m) : []; }catch(e){ manualMatches = []; }
-    renderRegistre();
-
-    // 2. Puis tente de récupérer la version serveur (synchronisée entre appareils) et l'utilise si elle existe
-    try{
-      const res = await fetch(WORKER_URL + '/api/data', { headers: { 'X-App-Secret': APP_SECRET } });
-      if(res.ok){
-        const remote = await res.json();
-        if(remote){
-          config = remote.config ?? config;
-          entries = remote.entries ?? entries;
-          manualMatches = remote.manualMatches ?? manualMatches;
-          persistLocal();
-          renderRegistre();
-        }
-      }
-    }catch(e){ console.error('Sync serveur indisponible, on reste sur les données locales.', e); }
-  }
-
-  function persistLocal(){
-    try{ localStorage.setItem('bankroll:config', JSON.stringify(config)); }catch(e){ console.error(e); }
-    try{ localStorage.setItem('bankroll:entries', JSON.stringify(entries)); }catch(e){ console.error(e); }
-    try{ localStorage.setItem('bankroll:matches', JSON.stringify(manualMatches)); }catch(e){ console.error(e); }
-  }
-
-  async function syncToServer(){
-    try{
-      await fetch(WORKER_URL + '/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-App-Secret': APP_SECRET },
-        body: JSON.stringify({ config, entries, manualMatches })
-      });
-    }catch(e){ console.error('Échec de la synchronisation serveur (les données restent sauvées en local).', e); }
-  }
-
-  async function saveConfig(){ persistLocal(); await syncToServer(); }
-  async function saveEntries(){ persistLocal(); await syncToServer(); }
-  async function saveManualMatches(){ persistLocal(); await syncToServer(); }
-
-  function renderSetup(){
-    const panel = document.getElementById('setup-panel');
-    if(!config){
-      panel.innerHTML = `
-        <div class="field-row">
-          <div class="field" style="max-width:220px;"><label for="depart-input">Mise de départ (€)</label><input type="number" id="depart-input" min="0" step="1" placeholder="ex. 200"></div>
-          <button id="start-btn">Démarrer le suivi</button>
-        </div>`;
-      document.getElementById('start-btn').addEventListener('click', async ()=>{
-        const val = parseFloat(document.getElementById('depart-input').value);
-        if(isNaN(val) || val < 0){ document.getElementById('depart-input').focus(); return; }
-        config = { depart: val };
-        await saveConfig();
-        renderRegistre();
-      });
-    } else {
-      panel.innerHTML = `
-        <div class="field-row" style="justify-content: space-between;">
-          <div style="color: var(--text-dim); font-size: 13px;">Mise de départ : <strong style="color: var(--text); font-family: 'IBM Plex Mono', monospace;">${fmtEUR(config.depart)}</strong></div>
-          <button class="ghost small" id="edit-depart-btn">Modifier</button>
-        </div>`;
-      document.getElementById('edit-depart-btn').addEventListener('click', ()=>{
-        config = null;
-        renderSetup();
-        document.getElementById('dashboard-wrap').style.display='none';
-      });
+// Tout ce qui est prévu jusqu'à une date : ponctuels + occurrences des récurrents
+function upcoming(until){
+  const t0 = today(), list = [];
+  state.planned.forEach(p => { if(p.date <= until) list.push({ src:'planned', id:p.id, date:p.date, title:p.title, kind:p.kind, amount:p.amount, category:p.category, overdue: p.date < t0 }); });
+  state.recurring.filter(r => r.active).forEach(r => {
+    const rr = { ...r }; let guard = 0;
+    while(rr.nextDate <= until && guard++ < 600){
+      list.push({ src:'recurring', id:r.id, date:rr.nextDate, title:r.title, kind:r.kind, amount:r.amount, category:r.category, freq:r.freq });
+      rr.nextDate = advance(rr);
     }
-  }
-
-  function computeStats(){
-    const gains = entries.filter(e=> e.type ? e.type==='gain' : e.amount>0).reduce((s,e)=>s+e.amount,0);
-    const pertes = entries.filter(e=> e.type==='perte' || (!e.type && e.amount<0)).reduce((s,e)=>s+Math.abs(e.amount),0);
-    const retraits = entries.filter(e=> e.type==='retrait').reduce((s,e)=>s+Math.abs(e.amount),0);
-    const engages = entries.filter(e=> e.type==='engage').reduce((s,e)=>s+Math.abs(e.amount),0);
-    const benefice = gains - pertes; // profit réel de l'activité de paris, indépendant des retraits et de la mise de départ
-    const balance = config.depart + entries.reduce((s,e)=>s+e.amount,0);
-    return { gains, pertes, retraits, benefice, balance };
-  }
-
-  function renderKPIs(){
-    if(!config) return;
-    document.getElementById('dashboard-wrap').style.display='block';
-    const { gains, pertes, retraits, benefice, balance } = computeStats();
-    const fig = document.getElementById('balance-figure');
-    fig.textContent = fmtEUR(balance);
-    fig.style.color = balance < config.depart ? 'var(--loss)' : 'var(--text)';
-    const delta = balance - config.depart;
-    const deltaEl = document.getElementById('balance-delta');
-    if(entries.length === 0){ deltaEl.textContent = 'Aucun mouvement enregistré'; }
-    else{
-      const pct = config.depart > 0 ? (delta/config.depart*100) : 0;
-      deltaEl.innerHTML = `<span class="pill ${delta>=0?'up':'down'}">${delta>=0?'\u25b2':'\u25bc'} ${fmtEUR(Math.abs(delta))} (${pct>=0?'+':''}${pct.toFixed(1)}%)</span> depuis le départ`;
-    }
-    document.getElementById('stat-depart').textContent = fmtEUR(config.depart);
-    document.getElementById('stat-gains').textContent = fmtEUR(gains);
-    document.getElementById('stat-pertes').textContent = fmtEUR(pertes);
-    document.getElementById('stat-retraits').textContent = fmtEUR(retraits);
-    const beneficeEl = document.getElementById('stat-benefice');
-    beneficeEl.textContent = (benefice>=0?'+':'') + fmtEUR(benefice);
-    beneficeEl.style.color = benefice >= 0 ? 'var(--gain)' : 'var(--loss)';
-    const totalMiseAllBets = manualMatches.reduce((s,m)=>s+m.mise, 0);
-    document.getElementById('stat-total-mise').textContent = fmtEUR(totalMiseAllBets);
-    const miseEnAttente = manualMatches.filter(m => !m.status || m.status === 'pending').reduce((s,m)=>s+m.mise, 0);
-    document.getElementById('stat-mise-attente').textContent = fmtEUR(miseEnAttente);
-    const gainPotentiel = manualMatches.filter(m => !m.status || m.status === 'pending').reduce((s,m)=>s+(m.mise*m.cote - m.mise), 0);
-    document.getElementById('stat-gain-potentiel').textContent = '+' + fmtEUR(gainPotentiel);
-  }
-
-  function getFilteredPoints(){
-    const sorted = [...entries].sort((a,b)=> a.date.localeCompare(b.date));
-    let running = config.depart;
-    let points = [{ date: null, val: running, isStart: true, type: null }];
-    sorted.forEach(e=>{ running += e.amount; points.push({ date: e.date, val: running, isStart:false, type: e.type || (e.amount>=0?'gain':'perte') }); });
-
-    if(currentRange === 'all' || points.length <= 1) return points;
-
-    if(currentRange === 'custom'){
-      if(!customFrom && !customTo) return points;
-      let idx = points.findIndex(p => p.date && (!customFrom || p.date >= customFrom));
-      if(idx === -1) idx = points.length - 1;
-      if(idx > 0) idx -= 1;
-      let filtered = points.slice(Math.max(idx,0));
-      if(customTo) filtered = filtered.filter(p => !p.date || p.date <= customTo);
-      return filtered.length ? filtered : points;
-    }
-
-    const days = parseInt(currentRange, 10);
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    const cutoffStr = cutoff.toISOString().slice(0,10);
-
-    let idx = points.findIndex(p => p.date && p.date >= cutoffStr);
-    if(idx === -1) idx = points.length - 1;
-    if(idx > 0) idx -= 1; // keep one prior point as the starting baseline for the visible range
-    return points.slice(Math.max(idx,0));
-  }
-
-  /* ---- Zoom & pan state ---- */
-  let zoomWindow = { start: 0, end: 1 }; // fractions of the currently filtered points array
-  let dragState = { active: false, startX: 0, startWindow: null, wrap: null, svg: null };
-
-  window.addEventListener('mousemove', (e)=>{
-    if(!dragState.active) return;
-    const rect = dragState.wrap.getBoundingClientRect();
-    const deltaFrac = (e.clientX - dragState.startX) / rect.width * (dragState.startWindow.end - dragState.startWindow.start);
-    let start = dragState.startWindow.start - deltaFrac, end = dragState.startWindow.end - deltaFrac;
-    const range = end - start;
-    if(start < 0){ start = 0; end = range; }
-    if(end > 1){ end = 1; start = 1 - range; }
-    zoomWindow = { start, end };
-    renderChart();
   });
-  window.addEventListener('mouseup', ()=>{
-    if(dragState.active && dragState.svg) dragState.svg.classList.remove('dragging');
-    dragState.active = false;
-  });
+  return list.sort((a,b) => a.date.localeCompare(b.date) || (a.kind === 'in' ? -1 : 1));
+}
 
-  function resetZoom(){ zoomWindow = { start: 0, end: 1 }; document.getElementById('zoom-reset').style.display = 'none'; }
+/* ================= Toast ================= */
+let toastTimer = null;
+function toast(msg, undo){
+  const el = $('toast');
+  el.innerHTML = `<span>${esc(msg)}</span>${undo ? '<button type="button" id="toast-undo">Annuler</button>' : ''}`;
+  el.classList.add('show');
+  if(undo) $('toast-undo').onclick = () => { undo(); el.classList.remove('show'); };
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), undo ? 5000 : 2600);
+}
 
-  function applyZoom(factor, centerFrac, pointCount){
-    const minRange = Math.min(1, 2 / Math.max(pointCount - 1, 1));
-    const range = zoomWindow.end - zoomWindow.start;
-    const center = zoomWindow.start + range * centerFrac;
-    let newRange = Math.max(minRange, Math.min(1, range * factor));
-    let newStart = center - newRange * centerFrac;
-    let newEnd = newStart + newRange;
-    if(newStart < 0){ newStart = 0; newEnd = newRange; }
-    if(newEnd > 1){ newEnd = 1; newStart = 1 - newRange; }
-    zoomWindow = { start: newStart, end: newEnd };
-    document.getElementById('zoom-reset').style.display = (newStart > 0.001 || newEnd < 0.999) ? 'block' : 'none';
-    renderChart();
+/* ================= Segmented controls ================= */
+function setSeg(id, v){ const el = $(id); el.dataset.value = v; el.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.v === v)); }
+function initSeg(id, onChange){
+  $(id).addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if(!b) return; setSeg(id, b.dataset.v); onChange && onChange(b.dataset.v); });
+}
+
+/* ================= Onglets ================= */
+function showTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  try{ localStorage.setItem(LS_TAB, name); }catch(e){}
+  if(name === 'apercu') renderChart();
+}
+$('tabs').addEventListener('click', e => { const b = e.target.closest('.tab-btn'); if(b) showTab(b.dataset.tab); });
+document.addEventListener('click', e => { const g = e.target.closest('[data-goto]'); if(g) showTab(g.dataset.goto); });
+$('sync-pill').addEventListener('click', () => showTab('reglages'));
+$('fab').addEventListener('click', () => { showTab('operations'); window.scrollTo({ top:0, behavior:'smooth' }); setTimeout(() => $('tx-amount').focus(), 250); });
+
+/* ================= Graphique ================= */
+const svg = $('chart');
+let chartRange = '90', customFrom = null, customTo = null;
+let zoom = { s:0, e:1 };
+let chartCoords = [], chartW = 760;
+const CH = 240;
+
+function dailySeries(){
+  const t0 = today();
+  const byDay = {};
+  let first = state.settings.startDate || t0;
+  state.transactions.forEach(t => { byDay[t.date] = (byDay[t.date] || 0) + signed(t); if(t.date < first) first = t.date; });
+  const minStart = addDays(t0, -365*6);
+  let bal = state.settings.startBalance || 0;
+  if(first < minStart){ Object.keys(byDay).forEach(d => { if(d < minStart) bal += byDay[d]; }); first = minStart; }
+  const pts = []; let d = first, guard = 0;
+  while(d <= t0 && guard++ < 2500){ const mv = byDay[d] || 0; bal += mv; pts.push({ date:d, val:round2(bal), mv:round2(mv) }); d = addDays(d, 1); }
+  if(pts.length === 1) pts.unshift({ date:addDays(pts[0].date,-1), val:round2(pts[0].val - pts[0].mv), mv:0 });
+  return pts;
+}
+
+function rangePoints(){
+  let pts = dailySeries();
+  if(chartRange === 'custom'){
+    if(customFrom) pts = pts.filter(p => p.date >= customFrom);
+    if(customTo) pts = pts.filter(p => p.date <= customTo);
+  } else if(chartRange !== 'all'){
+    const from = addDays(today(), -parseInt(chartRange, 10));
+    const idx = pts.findIndex(p => p.date >= from);
+    if(idx > 0) pts = pts.slice(idx);
   }
+  return pts;
+}
 
-  function panZoom(deltaFrac){
-    const range = zoomWindow.end - zoomWindow.start;
-    let newStart = zoomWindow.start - deltaFrac;
-    let newEnd = zoomWindow.end - deltaFrac;
-    if(newStart < 0){ newStart = 0; newEnd = range; }
-    if(newEnd > 1){ newEnd = 1; newStart = 1 - range; }
-    zoomWindow = { start: newStart, end: newEnd };
-    renderChart();
+function renderChart(){
+  if(!$('view-apercu').classList.contains('active') || $('dash').hidden) return;
+  chartW = Math.max(280, Math.round(svg.getBoundingClientRect().width || 760));
+  const W = chartW, H = CH;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const all = rangePoints();
+  if(all.length < 2){
+    chartCoords = [];
+    svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#5d6a7b" font-size="13" font-family="Inter, sans-serif">Pas de données sur cette période</text>`;
+    $('bal-delta').textContent = '';
+    return;
   }
+  const n = all.length;
+  let i0 = Math.floor(zoom.s * (n-1)), i1 = Math.ceil(zoom.e * (n-1));
+  if(i1 - i0 < 1){ i0 = 0; i1 = n-1; }
+  const pts = all.slice(i0, i1+1);
+  const vals = pts.map(p => p.val);
+  const dMin = Math.min(...vals), dMax = Math.max(...vals);
+  let lo = dMin, hi = dMax;
+  if(hi - lo < 1){ lo -= 1; hi += 1; }
+  const pv = (hi - lo) * 0.1; lo -= pv; hi += pv;
+  const PL = 6, PR = 6, PT = 14, PB = 26, iw = W-PL-PR, ih = H-PT-PB;
+  const X = i => PL + i * iw / (pts.length - 1);
+  const Y = v => PT + ih * (1 - (v - lo) / (hi - lo));
+  chartCoords = pts.map((p,i) => ({ ...p, x:X(i), y:Y(p.val) }));
+  const last = chartCoords[chartCoords.length-1];
+  const up = vals[vals.length-1] >= vals[0];
+  const col = up ? '#34d399' : '#f87171';
+  const line = chartCoords.map((c,i) => (i ? 'L' : 'M') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+  const area = `${line} L${last.x.toFixed(1)},${PT+ih} L${chartCoords[0].x.toFixed(1)},${PT+ih} Z`;
 
-  function renderChart(){
-    const wrap = document.getElementById('chart-wrap');
-    const tooltip = document.getElementById('chart-tooltip');
-    wrap.querySelectorAll('svg, .chart-empty').forEach(n=>n.remove());
+  const gv = dMax - dMin < 0.01 ? [dMin] : [dMin, (dMin+dMax)/2, dMax];
+  const grid = gv.map(v => { const y = Y(v).toFixed(1);
+    return `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#1e2733" stroke-width="1"/>
+            <text x="${W-PR}" y="${(Y(v)-5).toFixed(1)}" text-anchor="end" font-family="Inter, sans-serif" font-size="10.5" fill="#5d6a7b">${money(v,{dec:0})}</text>`; }).join('');
+  const zero = (lo < 0 && hi > 0) ? `<line x1="${PL}" y1="${Y(0).toFixed(1)}" x2="${W-PR}" y2="${Y(0).toFixed(1)}" stroke="#f87171" stroke-opacity=".5" stroke-dasharray="4 4"/>` : '';
+  const long = pts.length > 200;
+  const xo = long ? {month:'short', year:'2-digit'} : {day:'numeric', month:'short'};
+  const idxs = [...new Set([0, Math.floor((pts.length-1)/2), pts.length-1])];
+  const xl = idxs.map((i,k) => `<text x="${chartCoords[i].x.toFixed(1)}" y="${H-6}" text-anchor="${k===0?'start':(i===pts.length-1?'end':'middle')}" font-family="Inter, sans-serif" font-size="10.5" fill="#5d6a7b">${fmtDay(pts[i].date, xo)}</text>`).join('');
 
-    if(entries.length === 0){
-      const div = document.createElement('div');
-      div.className = 'chart-empty';
-      div.textContent = 'Ajoute ton premier résultat pour voir la courbe démarrer.';
-      wrap.insertBefore(div, tooltip);
-      return;
-    }
+  svg.innerHTML = `
+    <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}" stop-opacity=".22"/><stop offset="100%" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+    ${grid}${zero}
+    <path d="${area}" fill="url(#ag)"/>
+    <path d="${line}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    ${xl}
+    <line id="c-guide" x1="0" y1="${PT}" x2="0" y2="${PT+ih}" stroke="#93a0af" stroke-opacity=".35" stroke-dasharray="3 3" opacity="0"/>
+    <circle id="c-dot" r="4.5" fill="${col}" stroke="#0b0f15" stroke-width="2" opacity="0"/>
+    <circle cx="${last.x.toFixed(1)}" cy="${last.y.toFixed(1)}" r="4" fill="${col}"/>`;
 
-    const allPoints = getFilteredPoints();
-    const total = allPoints.length;
-    const startIdx = Math.max(0, Math.floor(zoomWindow.start * (total - 1)));
-    const endIdx = Math.min(total - 1, Math.ceil(zoomWindow.end * (total - 1)));
-    const points = allPoints.slice(startIdx, endIdx + 1).length >= 2 ? allPoints.slice(startIdx, endIdx + 1) : allPoints;
-    const w = 760, h = 220, padX = 10, padY = 14;
-    const vals = points.map(p=>p.val);
-    const min = Math.min(...vals), max = Math.max(...vals);
-    const range = (max - min) || 1;
-    const stepX = points.length > 1 ? (w - padX*2) / (points.length - 1) : 0;
+  const dv = vals[vals.length-1] - vals[0];
+  const pct = Math.abs(vals[0]) > 0.5 ? ` (${dv>=0?'+':''}${(dv/Math.abs(vals[0])*100).toFixed(1).replace('.',',')} %)` : '';
+  $('bal-delta').innerHTML = `<span class="pill ${dv>=0?'up':'down'}">${dv>=0?'▲':'▼'} ${money(Math.abs(dv))}${pct}</span><span>du ${fmtDay(pts[0].date)} au ${fmtDay(pts[pts.length-1].date)}</span>`;
+}
 
-    const coords = points.map((p,i)=>{
-      const x = padX + i*stepX;
-      const y = padY + (h - padY*2) * (1 - (p.val - min)/range);
-      return { x, y, ...p };
-    });
+function showTipAt(clientX){
+  if(!chartCoords.length) return;
+  const rect = svg.getBoundingClientRect();
+  const fx = (clientX - rect.left) / rect.width * chartW;
+  let best = 0, bd = Infinity;
+  chartCoords.forEach((c,i) => { const d = Math.abs(c.x - fx); if(d < bd){ bd = d; best = i; } });
+  const c = chartCoords[best];
+  const g = $('c-guide'), dot = $('c-dot');
+  if(g){ g.setAttribute('x1', c.x); g.setAttribute('x2', c.x); g.setAttribute('opacity', '1'); }
+  if(dot){ dot.setAttribute('cx', c.x); dot.setAttribute('cy', c.y); dot.setAttribute('opacity', '1'); }
+  $('tt-d').textContent = cap(fmtDay(c.date, {weekday:'short', day:'numeric', month:'short', year:'numeric'}));
+  $('tt-v').textContent = money(c.val);
+  const m = $('tt-m');
+  m.textContent = c.mv ? `${money(c.mv,{sign:true})} ce jour` : '';
+  m.style.color = c.mv > 0 ? 'var(--in)' : 'var(--out)';
+  const tt = $('tooltip');
+  const left = Math.min(Math.max(c.x * rect.width / chartW, 70), rect.width - 70);
+  tt.style.left = left + 'px';
+  tt.style.top = (svg.offsetTop + c.y * rect.height / CH) + 'px';
+  tt.style.opacity = '1';
+}
+function hideTip(){
+  $('tooltip').style.opacity = '0';
+  const g = $('c-guide'), dot = $('c-dot');
+  if(g) g.setAttribute('opacity','0');
+  if(dot) dot.setAttribute('opacity','0');
+}
 
-    const overallUp = vals[vals.length-1] >= vals[0];
-    const mainColor = overallUp ? '#34d399' : '#f87171';
+function setZoom(s, e){
+  const r = e - s;
+  if(s < 0){ s = 0; e = r; }
+  if(e > 1){ e = 1; s = 1 - r; }
+  zoom = { s, e };
+  $('zoom-reset').hidden = !(s > 0.001 || e < 0.999);
+  renderChart();
+}
+function zoomBy(f, cf){
+  const n = rangePoints().length;
+  const minR = Math.min(1, 4 / Math.max(n-1, 1));
+  const r = zoom.e - zoom.s;
+  const c = zoom.s + r * cf;
+  const nr = Math.max(minR, Math.min(1, r * f));
+  setZoom(c - nr*cf, c - nr*cf + nr);
+}
+function resetZoom(){ zoom = { s:0, e:1 }; $('zoom-reset').hidden = true; }
 
-    let segPaths = '';
-    for(let i=1;i<coords.length;i++){
-      const a = coords[i-1], b = coords[i];
-      const up = b.val >= a.val;
-      const segColor = b.type === 'retrait' ? '#22d3ee' : (b.type === 'engage' ? '#fbbf24' : (up ? '#34d399' : '#f87171'));
-      segPaths += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)}" fill="none" stroke="${segColor}" stroke-width="2.5" stroke-linecap="round"/>`;
-    }
+let drag = { active:false };
+svg.addEventListener('mousemove', e => { if(!drag.active) showTipAt(e.clientX); });
+svg.addEventListener('mouseleave', () => { if(!drag.active) hideTip(); });
+svg.addEventListener('mousedown', e => { drag = { active:true, x:e.clientX, z:{...zoom} }; svg.classList.add('dragging'); hideTip(); });
+window.addEventListener('mousemove', e => {
+  if(!drag.active) return;
+  const rect = svg.getBoundingClientRect();
+  const d = (e.clientX - drag.x) / rect.width * (drag.z.e - drag.z.s);
+  setZoom(drag.z.s - d, drag.z.e - d);
+});
+window.addEventListener('mouseup', () => { if(drag.active){ drag.active = false; svg.classList.remove('dragging'); } });
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = svg.getBoundingClientRect();
+  const cf = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  zoomBy(e.deltaY < 0 ? 0.85 : 1/0.85, cf);
+}, { passive:false });
 
-    const areaPath = `M${coords[0].x.toFixed(1)},${coords[0].y.toFixed(1)} ` +
-      coords.slice(1).map(c=>`L${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ') +
-      ` L${coords[coords.length-1].x.toFixed(1)},${h-padY} L${coords[0].x.toFixed(1)},${h-padY} Z`;
-
-    // gridlines: min, mid, max
-    const gridVals = [min, (min+max)/2, max];
-    const gridLines = gridVals.map(v=>{
-      const y = padY + (h - padY*2) * (1 - (v - min)/range);
-      return `<line x1="${padX}" y1="${y.toFixed(1)}" x2="${w-padX}" y2="${y.toFixed(1)}" stroke="#1c2430" stroke-width="1"/>
-              <text x="${w-padX}" y="${(y-4).toFixed(1)}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="#54606f">${fmtEUR(v)}</text>`;
-    }).join('');
-
-    const svgNS = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(svgNS, 'svg');
-    svg.setAttribute('class','chart');
-    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-    svg.setAttribute('preserveAspectRatio','none');
-    svg.innerHTML = `
-      <defs>
-        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${mainColor}" stop-opacity="0.20"/>
-          <stop offset="100%" stop-color="${mainColor}" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      ${gridLines}
-      <path d="${areaPath}" fill="url(#areaGrad)" stroke="none"/>
-      ${segPaths}
-      ${coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="10" fill="transparent" class="hit" data-x="${c.x}" data-y="${c.y}" data-val="${c.val}" data-date="${c.date||''}"/>`).join('')}
-      <circle cx="${coords[coords.length-1].x.toFixed(1)}" cy="${coords[coords.length-1].y.toFixed(1)}" r="4" fill="${coords[coords.length-1].type === 'retrait' ? '#22d3ee' : (coords[coords.length-1].type === 'engage' ? '#fbbf24' : mainColor)}"/>
-    `;
-    wrap.insertBefore(svg, tooltip);
-    wireZoomPan(svg, wrap, allPoints.length);
-
-    svg.querySelectorAll('.hit').forEach(hit=>{
-      hit.addEventListener('mouseenter', ()=>{
-        const rect = wrap.getBoundingClientRect();
-        const scaleX = rect.width / w;
-        const scaleY = rect.height / h;
-        const px = parseFloat(hit.dataset.x) * scaleX;
-        const py = parseFloat(hit.dataset.y) * scaleY;
-        const val = parseFloat(hit.dataset.val);
-        const dateStr = hit.dataset.date ? new Date(hit.dataset.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : 'Départ';
-        document.getElementById('tt-date').textContent = dateStr;
-        document.getElementById('tt-val').textContent = fmtEUR(val);
-        tooltip.style.left = px + 'px';
-        tooltip.style.top = py + 'px';
-        tooltip.style.opacity = '1';
-      });
-      hit.addEventListener('mouseleave', ()=>{ tooltip.style.opacity = '0'; });
-    });
+let tm = null;
+svg.addEventListener('touchstart', e => {
+  const rect = svg.getBoundingClientRect();
+  if(e.touches.length === 1){ tm = { mode:'pan', x:e.touches[0].clientX, z:{...zoom} }; showTipAt(e.touches[0].clientX); }
+  else if(e.touches.length === 2){
+    const x1 = e.touches[0].clientX, x2 = e.touches[1].clientX;
+    tm = { mode:'pinch', d:Math.abs(x2-x1) || 1, cf:Math.min(1, Math.max(0, ((x1+x2)/2 - rect.left) / rect.width)), z:{...zoom} };
+    hideTip();
   }
-
-  function wireZoomPan(svg, wrap, pointCount){
-    // Molette (desktop) : zoom centré sur la position du curseur
-    svg.addEventListener('wheel', (e)=>{
-      e.preventDefault();
-      const rect = wrap.getBoundingClientRect();
-      const centerFrac = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-      const factor = e.deltaY < 0 ? 0.82 : 1/0.82;
-      applyZoom(factor, centerFrac, pointCount);
-    }, { passive: false });
-
-    // Glisser à la souris : déplacement
-    svg.addEventListener('mousedown', (e)=>{
-      dragState = { active: true, startX: e.clientX, startWindow: { ...zoomWindow }, wrap, svg };
-      svg.classList.add('dragging');
-    });
-
-    // Tactile : un doigt = déplacer, deux doigts = pincer pour zoomer
-    let touchMode = null, touchStartX = 0, touchStartWindow = null, pinchStartDist = 0, pinchStartWindow = null, pinchCenterFrac = 0.5;
-    svg.addEventListener('touchstart', (e)=>{
-      const rect = wrap.getBoundingClientRect();
-      if(e.touches.length === 1){
-        touchMode = 'pan'; touchStartX = e.touches[0].clientX; touchStartWindow = { ...zoomWindow };
-      } else if(e.touches.length === 2){
-        touchMode = 'pinch';
-        const x1 = e.touches[0].clientX, x2 = e.touches[1].clientX;
-        pinchStartDist = Math.abs(x2 - x1);
-        pinchCenterFrac = Math.min(1, Math.max(0, ((x1+x2)/2 - rect.left) / rect.width));
-        pinchStartWindow = { ...zoomWindow };
-      }
-    }, { passive: true });
-    svg.addEventListener('touchmove', (e)=>{
-      const rect = wrap.getBoundingClientRect();
-      if(touchMode === 'pan' && e.touches.length === 1){
-        const deltaFrac = (e.touches[0].clientX - touchStartX) / rect.width * (touchStartWindow.end - touchStartWindow.start);
-        let start = touchStartWindow.start - deltaFrac, end = touchStartWindow.end - deltaFrac;
-        const range = end - start;
-        if(start < 0){ start = 0; end = range; }
-        if(end > 1){ end = 1; start = 1 - range; }
-        zoomWindow = { start, end };
-        renderChart();
-      } else if(touchMode === 'pinch' && e.touches.length === 2){
-        const x1 = e.touches[0].clientX, x2 = e.touches[1].clientX;
-        const dist = Math.abs(x2 - x1) || 1;
-        const factor = pinchStartDist / dist;
-        zoomWindow = { ...pinchStartWindow };
-        applyZoom(factor, pinchCenterFrac, pointCount);
-      }
-    }, { passive: true });
-    svg.addEventListener('touchend', ()=>{ touchMode = null; });
+}, { passive:true });
+svg.addEventListener('touchmove', e => {
+  if(!tm) return;
+  const rect = svg.getBoundingClientRect();
+  if(tm.mode === 'pan' && e.touches.length === 1){
+    if(tm.z.e - tm.z.s < 0.999){
+      const d = (e.touches[0].clientX - tm.x) / rect.width * (tm.z.e - tm.z.s);
+      hideTip(); setZoom(tm.z.s - d, tm.z.e - d);
+    } else showTipAt(e.touches[0].clientX);
+  } else if(tm.mode === 'pinch' && e.touches.length === 2){
+    const d = Math.abs(e.touches[1].clientX - e.touches[0].clientX) || 1;
+    zoom = { ...tm.z };
+    zoomBy(tm.d / d, tm.cf);
   }
+}, { passive:true });
+svg.addEventListener('touchend', () => { tm = null; setTimeout(hideTip, 1200); });
 
-  document.getElementById('zoom-reset').addEventListener('click', ()=>{ resetZoom(); renderChart(); });
+$('zoom-reset').addEventListener('click', () => { resetZoom(); renderChart(); });
+initSeg('range-seg', v => { chartRange = v; $('custom-range').hidden = v !== 'custom'; resetZoom(); renderChart(); });
+$('c-from').addEventListener('change', e => { customFrom = e.target.value || null; resetZoom(); renderChart(); });
+$('c-to').addEventListener('change', e => { customTo = e.target.value || null; resetZoom(); renderChart(); });
 
-  document.querySelectorAll('.range-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      currentRange = btn.dataset.range;
-      resetZoom();
-      const customRow = document.getElementById('custom-range-row');
-      if(currentRange === 'custom'){
-        customRow.style.display = 'flex';
-      } else {
-        customRow.style.display = 'none';
-      }
-      renderChart();
-    });
-  });
+let rzFrame = null;
+if('ResizeObserver' in window){
+  new ResizeObserver(() => { cancelAnimationFrame(rzFrame); rzFrame = requestAnimationFrame(renderChart); }).observe($('chart-wrap'));
+}
 
-  document.getElementById('custom-from').addEventListener('change', (e)=>{
-    customFrom = e.target.value || null;
-    resetZoom();
-    renderChart();
-  });
-  document.getElementById('custom-to').addEventListener('change', (e)=>{
-    customTo = e.target.value || null;
-    resetZoom();
-    renderChart();
-  });
+/* ================= Aperçu ================= */
+$('ob-start').addEventListener('click', () => {
+  const v = parseAmount($('ob-balance').value);
+  if(isNaN(v)){ $('ob-balance').focus(); return; }
+  state.settings.startBalance = v; state.settings.startDate = today();
+  commit(); renderSettings(); renderChart();
+  toast('C\'est parti ! Ajoute tes abonnements et ton salaire dans « Fixes & abonnements ».');
+});
 
-  function renderLedger(){
-    const rows = document.getElementById('ledger-rows');
-    if(entries.length === 0){
-      rows.innerHTML = `<div class="empty-state">Aucun mouvement pour le moment. Ajoute ton premier résultat du jour ci-dessus.</div>`;
-      return;
-    }
-    const sorted = [...entries].sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
-    const chronoAsc = [...entries].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
-    const balances = {};
-    let r = config.depart;
-    chronoAsc.forEach(e=>{ r += e.amount; balances[e.id] = r; });
+function renderDashboard(){
+  const has = state.settings.startBalance !== null && state.settings.startBalance !== undefined;
+  $('onboarding').hidden = has; $('dash').hidden = !has;
+  if(!has) return;
+  const t0 = today(), mk = monthKey(t0), bal = currentBalance();
+  $('bal-figure').textContent = money(bal);
+  $('bal-figure').classList.toggle('neg', bal < 0);
 
-    rows.innerHTML = sorted.map(e=>{
-      const kind = e.type || (e.amount >= 0 ? 'gain' : 'perte'); // rétro-compatibilité avec les anciennes entrées sans type
-      const isGain = kind === 'gain';
-      const isRetrait = kind === 'retrait';
-      const isEngage = kind === 'engage';
-      const dotClass = isGain ? 'gain' : (isRetrait ? 'retrait' : (isEngage ? 'engage' : 'loss'));
-      const amountClass = isGain ? 'gain' : (isRetrait ? 'retrait' : (isEngage ? 'engage' : 'loss'));
-      const icon = isGain ? '\u25b2' : (isRetrait ? '\u2193' : (isEngage ? '\u23f3' : '\u25bc'));
-      const defaultNote = isGain ? 'Gain du jour' : (isRetrait ? 'Retrait' : (isEngage ? 'Mise engagée' : 'Perte du jour'));
-      const dateFmt = new Date(e.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
-      return `
-        <div class="ledger-entry" data-id="${e.id}">
-          <div class="ledger-item" style="cursor:pointer; border-bottom:none;">
-            <div class="ledger-dot ${dotClass}">${icon}</div>
-            <div class="ledger-main">
-              <div class="note">${e.note ? escapeHtml(e.note) : defaultNote}</div>
-              <div class="date">${dateFmt}</div>
-            </div>
-            <div class="ledger-side">
-              <div class="amount ${amountClass}">${isGain?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-              <div class="running">${fmtEUR(balances[e.id])}</div>
-            </div>
-            <button class="ledger-del" data-id="${e.id}" title="Supprimer" aria-label="Supprimer ce mouvement">\u2715</button>
-          </div>
-          <div class="history-desc"><div class="history-desc-inner">${e.description ? escapeHtml(e.description) : 'Aucune description ajoutée pour ce mouvement.'}</div></div>
-        </div>`;
-    }).join('');
+  const ms = monthStats(mk);
+  const prevD = parseD(t0); prevD.setDate(1); prevD.setMonth(prevD.getMonth()-1);
+  const pm = monthStats(monthKey(ymd(prevD)));
+  $('k-in').textContent = money(ms.inc);
+  $('k-in-sub').textContent = pm.inc ? `${money(pm.inc,{dec:0})} le mois dernier` : '\u00a0';
+  $('k-out').textContent = money(ms.out);
+  $('k-out-sub').textContent = pm.out ? `${money(pm.out,{dec:0})} le mois dernier` : '\u00a0';
+  const net = ms.inc - ms.out;
+  $('k-net').textContent = money(net, {sign:true});
+  $('k-net').className = 'value ' + (net >= 0 ? 'pos' : 'neg');
+  $('k-net-sub').textContent = ms.inc > 0 ? `${Math.round(net/ms.inc*100)} % de tes revenus` : '\u00a0';
 
-    rows.querySelectorAll('.ledger-entry').forEach(entryEl=>{
-      entryEl.querySelector('.ledger-item').addEventListener('click', (ev)=>{
-        if(ev.target.closest('.ledger-del')) return;
-        entryEl.classList.toggle('open');
-      });
-    });
+  const outs = state.recurring.filter(r => r.active && r.kind === 'out');
+  $('k-fixed').textContent = money(sum(outs, monthlyEq));
+  $('k-fixed-sub').textContent = outs.length ? `${outs.length} prélèvement${outs.length>1?'s':''} actif${outs.length>1?'s':''}` : 'aucun pour l\'instant';
 
-    rows.querySelectorAll('.ledger-del').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        entries = entries.filter(e=>e.id !== parseFloat(btn.dataset.id));
-        await saveEntries();
-        renderRegistre();
-      });
-    });
+  const up = upcoming(endOfMonth(t0));
+  const toPay = sum(up.filter(o => o.kind === 'out'), o => o.amount);
+  const toGet = sum(up.filter(o => o.kind === 'in'), o => o.amount);
+  $('k-topay').textContent = money(toPay);
+  $('k-topay-sub').textContent = toGet > 0 ? `et ${money(toGet)} à recevoir` : 'd\'ici la fin du mois';
+  const proj = bal + toGet - toPay;
+  $('k-proj').textContent = money(proj);
+  $('k-proj').className = 'value ' + (proj < 0 ? 'neg' : '');
+
+  // Catégories du mois
+  const byCat = {};
+  state.transactions.forEach(t => { if(t.kind === 'out' && monthKey(t.date) === mk) byCat[t.category] = (byCat[t.category] || 0) + t.amount; });
+  const cats = Object.entries(byCat).sort((a,b) => b[1] - a[1]);
+  const maxC = cats.length ? cats[0][1] : 1;
+  $('cat-bars').innerHTML = cats.length ? cats.map(([id, v]) => { const c = cat(id);
+    return `<div class="catbar"><div class="catbar-top"><span>${c.emoji} ${esc(c.label)}<span class="pct">${Math.round(v/ms.out*100)} %</span></span><span>${money(v)}</span></div>
+      <div class="catbar-track"><div class="catbar-fill" style="width:${(v/maxC*100).toFixed(1)}%; background:${c.color};"></div></div></div>`; }).join('')
+    : `<div class="empty">Aucune dépense ce mois-ci pour l'instant.</div>`;
+
+  // Prochaines échéances
+  const next = upcoming(addDays(t0, 30)).slice(0, 6);
+  $('next-list').innerHTML = next.length ? next.map(o => { const c = cat(o.category);
+    const when = o.overdue ? '<span class="tag late">En retard</span>' : (o.date === t0 ? 'aujourd\'hui' : fmtDay(o.date, {weekday:'short', day:'numeric', month:'short'}));
+    return `<div class="tx"><div class="tx-row" style="cursor:default;">${icon(c)}<div class="tx-main"><div class="tx-title">${esc(o.title || c.label)}</div><div class="tx-meta">${when}${o.src==='recurring' ? '<span class="tag">' + FREQ[o.freq] + '</span>' : ''}</div></div><div class="tx-amt ${o.kind}">${money(signed(o),{sign:true})}</div></div></div>`; }).join('')
+    : `<div class="empty">Rien de prévu dans les 30 prochains jours.</div>`;
+
+  // 6 derniers mois
+  const months = [];
+  for(let i = 5; i >= 0; i--){ const d = parseD(t0); d.setDate(1); d.setMonth(d.getMonth() - i); const k = monthKey(ymd(d)); months.push({ k, ...monthStats(k) }); }
+  const mx = Math.max(1, ...months.map(m => Math.max(m.inc, m.out)));
+  $('months').innerHTML = months.map(m => { const nt = m.inc - m.out;
+    return `<div class="mcol" title="${cap(monthLabel(m.k))} : +${money(m.inc)} / \u2212${money(m.out)}">
+      <div class="mbars"><div class="mbar in" style="height:${(m.inc/mx*100).toFixed(1)}%"></div><div class="mbar out" style="height:${(m.out/mx*100).toFixed(1)}%"></div></div>
+      <div class="mlabel">${parseD(m.k + '-01').toLocaleDateString('fr-FR',{month:'short'})}</div>
+      <div class="mnet ${nt>=0?'pos':'neg'}">${(m.inc||m.out) ? money(nt,{sign:true, dec:0}) : '\u00a0'}</div></div>`; }).join('');
+
+  renderChart();
+}
+
+/* ================= Opérations ================= */
+let editingTx = null;
+initSeg('tx-kind', v => fillCats($('tx-cat'), v, v === 'in' ? 'salaire' : 'courses'));
+
+function resetTxForm(){
+  editingTx = null;
+  setSeg('tx-kind', 'out'); fillCats($('tx-cat'), 'out', 'courses');
+  $('tx-amount').value = ''; $('tx-title').value = ''; $('tx-desc').value = '';
+  $('tx-date').value = today();
+  $('tx-submit').textContent = 'Ajouter'; $('tx-cancel').hidden = true;
+  $('tx-form-title').textContent = 'Ajouter une opération';
+}
+function startEditTx(id){
+  const t = state.transactions.find(x => x.id === id); if(!t) return;
+  editingTx = id;
+  setSeg('tx-kind', t.kind); fillCats($('tx-cat'), t.kind, t.category);
+  $('tx-amount').value = String(t.amount).replace('.', ',');
+  $('tx-date').value = t.date; $('tx-title').value = t.title || ''; $('tx-desc').value = t.description || '';
+  $('tx-submit').textContent = 'Enregistrer'; $('tx-cancel').hidden = false;
+  $('tx-form-title').textContent = 'Modifier une opération';
+  $('tx-form-title').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+$('tx-cancel').addEventListener('click', resetTxForm);
+$('tx-submit').addEventListener('click', () => {
+  const kind = $('tx-kind').dataset.value;
+  const amount = parseAmount($('tx-amount').value);
+  if(!(amount > 0)){ $('tx-amount').focus(); return; }
+  const date = $('tx-date').value || today();
+  const data = { kind, amount, date, category:$('tx-cat').value, title:$('tx-title').value.trim(), description:$('tx-desc').value.trim() };
+  if(editingTx){
+    const t = state.transactions.find(x => x.id === editingTx);
+    if(t) Object.assign(t, data);
+    toast('Opération modifiée');
+  } else if(date > today()){
+    state.planned.push({ id:uid(), ...data });
+    toast('Date future : ajoutée dans « À venir »');
+  } else {
+    state.transactions.push({ id:uid(), createdAt:Date.now(), ...data });
+    toast(kind === 'in' ? 'Revenu ajouté' : 'Dépense ajoutée');
   }
+  resetTxForm(); commit();
+});
+$('tx-amount').addEventListener('keydown', e => { if(e.key === 'Enter') $('tx-submit').click(); });
 
-  function renderManualMatches(){
-    const list = document.getElementById('match-list');
-    if(manualMatches.length === 0){
-      list.innerHTML = `<div class="empty-state">Aucun match dans le carnet pour le moment.</div>`;
-      return;
+function txItem(t){
+  const c = cat(t.category);
+  const tag = t.source?.type === 'recurring' ? '<span class="tag">Auto</span>' : (t.source?.type === 'planned' ? '<span class="tag">Prévu</span>' : '');
+  return `<div class="tx" data-id="${esc(t.id)}">
+    <div class="tx-row">${icon(c)}<div class="tx-main"><div class="tx-title">${esc(t.title || c.label)}</div><div class="tx-meta">${esc(c.label)}${tag}</div></div><div class="tx-amt ${t.kind}">${money(signed(t),{sign:true})}</div></div>
+    <div class="tx-more"><div><div class="tx-more-inner">${t.description ? `<p>${esc(t.description)}</p>` : '<p class="faint">Pas de note.</p>'}
+      <div class="tx-actions"><button type="button" class="btn ghost small" data-act="edit">Modifier</button><button type="button" class="btn danger small" data-act="del">Supprimer</button></div></div></div></div>
+  </div>`;
+}
+
+function dayLabel(d){
+  const t0 = today();
+  if(d === t0) return 'Aujourd\'hui';
+  if(d === addDays(t0,-1)) return 'Hier';
+  const sameYear = d.slice(0,4) === t0.slice(0,4);
+  return cap(fmtDay(d, sameYear ? {weekday:'long', day:'numeric', month:'long'} : {weekday:'long', day:'numeric', month:'long', year:'numeric'}));
+}
+
+function renderTx(){
+  const mSel = $('f-month'), cur = mSel.value;
+  const months = [...new Set(state.transactions.map(t => monthKey(t.date)))].sort().reverse();
+  mSel.innerHTML = '<option value="">Tous les mois</option>' + months.map(m => `<option value="${m}">${cap(monthLabel(m))}</option>`).join('');
+  if(months.includes(cur)) mSel.value = cur;
+
+  const q = $('f-search').value.trim().toLowerCase(), fk = $('f-kind').value, fc = $('f-cat').value, fm = mSel.value;
+  const list = state.transactions.filter(t =>
+    (!fm || monthKey(t.date) === fm) && (!fk || t.kind === fk) && (!fc || t.category === fc) &&
+    (!q || (t.title||'').toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q) || cat(t.category).label.toLowerCase().includes(q))
+  ).sort((a,b) => b.date.localeCompare(a.date) || (b.createdAt||0) - (a.createdAt||0));
+
+  const inc = sum(list.filter(t => t.kind === 'in'), t => t.amount), out = sum(list.filter(t => t.kind === 'out'), t => t.amount);
+  $('f-sum').innerHTML = list.length ? `<span>${list.length} opération${list.length>1?'s':''}</span><span>Entrées <b style="color:var(--in)">${money(inc)}</b></span><span>Sorties <b style="color:var(--out)">${money(out)}</b></span><span>Net <b>${money(inc-out,{sign:true})}</b></span>` : '';
+
+  const el = $('tx-list');
+  if(!state.transactions.length){ el.innerHTML = `<div class="empty">Aucune opération pour l'instant. Ajoute ta première dépense ci-dessus.</div>`; return; }
+  if(!list.length){ el.innerHTML = `<div class="empty">Aucune opération ne correspond à ces filtres.</div>`; return; }
+
+  const groups = [];
+  list.forEach(t => { const g = groups[groups.length-1]; if(g && g.date === t.date) g.items.push(t); else groups.push({ date:t.date, items:[t] }); });
+  el.innerHTML = groups.map(g => { const dn = sum(g.items, signed);
+    return `<div class="day-group"><div class="day-head"><span>${dayLabel(g.date)}</span><span class="dn ${dn>=0?'pos':'neg'}">${money(dn,{sign:true})}</span></div>${g.items.map(txItem).join('')}</div>`; }).join('');
+}
+
+$('f-cat').innerHTML = '<option value="">Toutes catégories</option>' +
+  `<optgroup label="Dépenses">${CATS.out.map(c => `<option value="${c.id}">${c.emoji} ${esc(c.label)}</option>`).join('')}</optgroup>` +
+  `<optgroup label="Revenus">${CATS.in.map(c => `<option value="${c.id}">${c.emoji} ${esc(c.label)}</option>`).join('')}</optgroup>`;
+['f-search','f-month','f-kind','f-cat'].forEach(id => $(id).addEventListener(id === 'f-search' ? 'input' : 'change', renderTx));
+
+$('tx-list').addEventListener('click', e => {
+  const item = e.target.closest('.tx'); if(!item) return;
+  const act = e.target.closest('[data-act]');
+  const id = item.dataset.id;
+  if(act){
+    if(act.dataset.act === 'edit') startEditTx(id);
+    if(act.dataset.act === 'del'){
+      const idx = state.transactions.findIndex(t => t.id === id); if(idx < 0) return;
+      const [removed] = state.transactions.splice(idx, 1);
+      commit();
+      toast('Opération supprimée', () => { state.transactions.push(removed); commit(); });
     }
-    const pending = manualMatches.filter(m => !m.status || m.status === 'pending');
-    const totalMise = pending.reduce((s,m)=>s+m.mise,0);
-    const totalPotentiel = pending.reduce((s,m)=>s+(m.mise*m.cote - m.mise),0);
-    const totalARecevoir = pending.reduce((s,m)=>s+(m.mise*m.cote),0);
-    const summaryHtml = `
-      <div class="kpi-row" style="grid-template-columns:repeat(3, 1fr); margin-bottom:16px;">
-        <div class="kpi"><div class="label">Total misé (en attente)</div><div class="value">${fmtEUR(totalMise)}</div></div>
-        <div class="kpi"><div class="label">Total à recevoir (en attente)</div><div class="value">${fmtEUR(totalARecevoir)}</div></div>
-        <div class="kpi"><div class="label">Gain potentiel (en attente)</div><div class="value gain">+${fmtEUR(totalPotentiel)}</div></div>
-      </div>`;
-    const sorted = [...manualMatches].sort((a,b)=>{
-      const aPending = (!a.status || a.status==='pending') ? 0 : 1;
-      const bPending = (!b.status || b.status==='pending') ? 0 : 1;
-      if(aPending !== bPending) return aPending - bPending;
-      return b.id - a.id;
-    });
-    list.innerHTML = summaryHtml + sorted.map(m=>{
-      const implied = (1 / m.cote * 100);
-      const potentialGain = m.mise * m.cote - m.mise;
-      const status = m.status || 'pending';
-      const matchesList = m.matches && m.matches.length ? m.matches : (m.teams ? [m.teams] : []);
-      const isCombo = matchesList.length > 1;
-      const titleLine = isCombo
-        ? matchesList.map(t=>`<div style="font-size:13.5px;">${escapeHtml(t)}</div>`).join('')
-        : `<div style="font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px;">${escapeHtml(matchesList[0] || '')}</div>`;
-      let statusBadgeHtml = '';
-      let actionsHtml = '';
-      if(status === 'pending'){
-        statusBadgeHtml = `<span style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--text-faint); border:1px solid var(--border); border-radius:20px; padding:2px 8px;">EN ATTENTE</span>`;
-        actionsHtml = `
-          <div class="field-row" style="margin-top:12px; justify-content:flex-end; gap:8px;">
-            <button class="ghost small" data-action="won" data-id="${m.id}" style="color:var(--gain); border-color: rgba(52,211,153,0.4);">✓ Gagné</button>
-            <button class="ghost small" data-action="lost" data-id="${m.id}" style="color:var(--loss); border-color: rgba(248,113,113,0.4);">✕ Perdu</button>
-          </div>`;
-      } else if(status === 'won'){
-        statusBadgeHtml = `<span style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--gain); border:1px solid rgba(52,211,153,0.4); border-radius:20px; padding:2px 8px;">GAGNÉ · +${fmtEUR(potentialGain)}</span>`;
-      } else if(status === 'lost'){
-        statusBadgeHtml = `<span style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--loss); border:1px solid rgba(248,113,113,0.4); border-radius:20px; padding:2px 8px;">PERDU · \u2212${fmtEUR(m.mise)}</span>`;
-      }
-      return `
-        <div class="panel" style="margin-bottom:10px; ${status!=='pending' ? 'opacity:0.75;' : ''}">
-          <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;">
-            <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--text-faint);">${escapeHtml(m.sport).toUpperCase()}${isCombo ? ` · COMBIN\u00c9 (${matchesList.length} matchs)` : ''}</span>
-            <div style="display:flex; align-items:center; gap:8px;">
-              ${statusBadgeHtml}
-              <button class="danger-ghost small" data-action="delete" data-id="${m.id}">Retirer</button>
-            </div>
-          </div>
-          <div style="margin:6px 0 10px 0; ${isCombo ? 'border-left:2px solid var(--border); padding-left:10px;' : ''}">${titleLine}</div>
-          <div class="kpi-row" style="margin:0; grid-template-columns:repeat(3, 1fr);">
-            <div class="kpi" style="padding:10px 12px;"><div class="label">Cote finale</div><div class="value">${m.cote.toFixed(2)}</div></div>
-            <div class="kpi" style="padding:10px 12px;"><div class="label">Probabilité implicite</div><div class="value">${implied.toFixed(1)} %</div></div>
-            <div class="kpi" style="padding:10px 12px;"><div class="label">Mise engagée</div><div class="value">${fmtEUR(m.mise)}</div></div>
-            <div class="kpi" style="padding:10px 12px;"><div class="label">Total à recevoir</div><div class="value">${fmtEUR(m.mise * m.cote)}</div></div>
-            <div class="kpi" style="padding:10px 12px;"><div class="label">Gain net</div><div class="value gain">+${fmtEUR(potentialGain)}</div></div>
-          </div>
-          ${m.note ? `<div style="margin-top:10px; font-size:13px; color:var(--text-dim);">${escapeHtml(m.note)}</div>` : ''}
-          ${actionsHtml}
-        </div>`;
-    }).join('');
-
-    list.querySelectorAll('[data-action="delete"]').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const id = parseFloat(btn.dataset.id);
-        const ticket = manualMatches.find(m=>m.id === id);
-        manualMatches = manualMatches.filter(m=>m.id !== id);
-        if(ticket && ticket.status === 'pending' && ticket.pendingEntryId){
-          entries = entries.filter(e => e.id !== ticket.pendingEntryId);
-          await saveEntries();
-        }
-        await saveManualMatches();
-        renderRegistre();
-      });
-    });
-
-    list.querySelectorAll('[data-action="won"], [data-action="lost"]').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const id = parseFloat(btn.dataset.id);
-        const ticket = manualMatches.find(m=>m.id === id);
-        if(!ticket) return;
-        const won = btn.dataset.action === 'won';
-        ticket.status = won ? 'won' : 'lost';
-        const today = new Date().toISOString().slice(0,10);
-        ticket.resolvedDate = today;
-        const matchesList = ticket.matches && ticket.matches.length ? ticket.matches : (ticket.teams ? [ticket.teams] : []);
-        const label = matchesList.length > 1 ? `Combiné (${matchesList.length} matchs) \u2014 ${matchesList.join(' + ')}` : matchesList[0];
-        // On retire l'entrée "mise engagée" temporaire et on la remplace par le résultat définitif
-        if(ticket.pendingEntryId){
-          entries = entries.filter(e => e.id !== ticket.pendingEntryId);
-        }
-        if(won){
-          const netProfit = ticket.mise * ticket.cote - ticket.mise;
-          entries.push({ id: Date.now(), date: today, amount: netProfit, type: 'gain', note: `Pari gagné \u2014 ${label}`, fromTicketId: ticket.id });
-        } else {
-          entries.push({ id: Date.now(), date: today, amount: -ticket.mise, type: 'perte', note: `Pari perdu \u2014 ${label}`, fromTicketId: ticket.id });
-        }
-        await saveManualMatches();
-        await saveEntries();
-        renderRegistre();
-      });
-    });
+    return;
   }
+  item.classList.toggle('open');
+});
 
-  function renderRegistre(){
-    renderSetup();
-    if(config){ renderKPIs(); renderChart(); renderLedger(); }
-    renderManualMatches();
-    renderHistory();
-    renderCalendar();
+/* ================= Fixes & abonnements ================= */
+let editingRec = null;
+initSeg('rec-kind', v => fillCats($('rec-cat'), v, v === 'in' ? 'salaire' : 'abonnements'));
+
+function resetRecForm(){
+  editingRec = null;
+  setSeg('rec-kind', 'out'); fillCats($('rec-cat'), 'out', 'abonnements');
+  $('rec-title').value = ''; $('rec-amount').value = ''; $('rec-freq').value = 'monthly'; $('rec-next').value = '';
+  $('rec-submit').textContent = 'Ajouter'; $('rec-cancel').hidden = true;
+  $('rec-form-title').textContent = 'Ajouter un salaire, un abonnement ou une charge fixe';
+}
+function startEditRec(id){
+  const r = state.recurring.find(x => x.id === id); if(!r) return;
+  editingRec = id;
+  setSeg('rec-kind', r.kind); fillCats($('rec-cat'), r.kind, r.category);
+  $('rec-title').value = r.title; $('rec-amount').value = String(r.amount).replace('.', ',');
+  $('rec-freq').value = r.freq; $('rec-next').value = r.nextDate;
+  $('rec-submit').textContent = 'Enregistrer'; $('rec-cancel').hidden = false;
+  $('rec-form-title').textContent = `Modifier « ${r.title} »`;
+  $('rec-form-title').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+$('rec-cancel').addEventListener('click', resetRecForm);
+$('rec-submit').addEventListener('click', () => {
+  const title = $('rec-title').value.trim();
+  const amount = parseAmount($('rec-amount').value);
+  const nextDate = $('rec-next').value;
+  if(!title){ $('rec-title').focus(); return; }
+  if(!(amount > 0)){ $('rec-amount').focus(); return; }
+  if(!nextDate){ $('rec-next').focus(); return; }
+  const data = { title, amount, kind:$('rec-kind').dataset.value, category:$('rec-cat').value, freq:$('rec-freq').value, nextDate, day:parseD(nextDate).getDate() };
+  // Une date passée est avancée à la prochaine occurrence, sans créer d'opérations rétroactives
+  const tmp = { ...data }; let guard = 0;
+  while(tmp.nextDate < today() && guard++ < 600) tmp.nextDate = advance(tmp);
+  data.nextDate = tmp.nextDate;
+  if(editingRec){
+    const r = state.recurring.find(x => x.id === editingRec);
+    if(r) Object.assign(r, data);
+    toast('Modifications enregistrées');
+  } else {
+    state.recurring.push({ id:uid(), active:true, ...data });
+    toast(data.nextDate === today() ? `« ${title} » ajouté et enregistré pour aujourd'hui` : `« ${title} » ajouté, prochaine échéance le ${fmtDay(data.nextDate)}`);
   }
+  resetRecForm(); commit();
+});
 
-  function renderHistory(){
-    const list = document.getElementById('history-list');
-    if(!list) return;
-    const searchEl = document.getElementById('history-search');
-    const query = (searchEl && searchEl.value ? searchEl.value : '').trim().toLowerCase();
+function recItem(r){
+  const c = cat(r.category);
+  const meta = r.active ? `${FREQ[r.freq]}, prochain le ${fmtDay(r.nextDate)}` : `${FREQ[r.freq]}<span class="tag paused">En pause</span>`;
+  const eq = r.freq !== 'monthly' ? `<div class="eq">≈ ${money(monthlyEq(r))} / mois</div>` : '';
+  return `<div class="rec ${r.active ? '' : 'paused'}" data-id="${esc(r.id)}">${icon(c)}
+    <div class="tx-main"><div class="tx-title">${esc(r.title)}</div><div class="tx-meta">${meta}</div></div>
+    <div class="rec-side"><div class="tx-amt ${r.kind}">${money(signed(r),{sign:true})}</div>${eq}</div>
+    <div class="rec-actions">
+      <button type="button" class="icon-btn" data-act="toggle" title="${r.active ? 'Mettre en pause' : 'Reprendre'}" aria-label="${r.active ? 'Mettre en pause' : 'Reprendre'}">${r.active ? '⏸' : '▶'}</button>
+      <button type="button" class="icon-btn" data-act="edit" title="Modifier" aria-label="Modifier">✎</button>
+      <button type="button" class="icon-btn del" data-act="del" title="Supprimer" aria-label="Supprimer">✕</button>
+    </div></div>`;
+}
 
-    let filtered = [...entries].sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
-    if(query){
-      filtered = filtered.filter(e => (e.note || '').toLowerCase().includes(query));
-    }
+function renderRec(){
+  const act = state.recurring.filter(r => r.active);
+  const fin = sum(act.filter(r => r.kind === 'in'), monthlyEq), fout = sum(act.filter(r => r.kind === 'out'), monthlyEq);
+  $('r-in').textContent = money(fin); $('r-out').textContent = money(fout);
+  $('r-left').textContent = money(fin - fout, {sign:true});
+  $('r-left').className = 'value ' + (fin - fout >= 0 ? 'pos' : 'neg');
+  const sorter = (a,b) => (b.active - a.active) || a.nextDate.localeCompare(b.nextDate);
+  const ins = state.recurring.filter(r => r.kind === 'in').sort(sorter);
+  const outs = state.recurring.filter(r => r.kind === 'out').sort(sorter);
+  $('rec-in-list').innerHTML = ins.length ? ins.map(recItem).join('') : `<div class="empty">Ajoute ton salaire pour qu'il soit compté automatiquement chaque mois.</div>`;
+  $('rec-out-list').innerHTML = outs.length ? outs.map(recItem).join('') : `<div class="empty">Loyer, téléphone, Netflix, Spotify, salle de sport… ajoute-les ici.</div>`;
+}
 
-    if(entries.length === 0){
-      list.innerHTML = `<div class="empty-state">Aucun mouvement enregistré pour le moment.</div>`;
-      return;
-    }
-    if(filtered.length === 0){
-      list.innerHTML = `<div class="empty-state">Aucun résultat pour "${escapeHtml(query)}".</div>`;
-      return;
-    }
-
-    list.innerHTML = filtered.map(e=>{
-      const kind = e.type || (e.amount >= 0 ? 'gain' : 'perte');
-      const isGain = kind === 'gain';
-      const isRetrait = kind === 'retrait';
-      const isEngage = kind === 'engage';
-      const amountClass = isGain ? 'gain' : (isRetrait ? 'retrait' : (isEngage ? 'engage' : 'loss'));
-      const defaultTitle = isGain ? 'Gain du jour' : (isRetrait ? 'Retrait' : (isEngage ? 'Mise engagée' : 'Perte du jour'));
-      const dateFmt = new Date(e.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
-      return `
-        <div class="history-item" data-id="${e.id}">
-          <div class="history-head">
-            <span class="h-note">${e.note ? escapeHtml(e.note) : defaultTitle}</span>
-            <span class="h-date">${dateFmt}</span>
-            <span class="h-amount ${amountClass}">${isGain?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-            <span class="h-chevron">\u25be</span>
-          </div>
-          <div class="history-desc"><div class="history-desc-inner">${e.description ? escapeHtml(e.description) : 'Aucune description ajoutée pour ce mouvement.'}</div></div>
-        </div>`;
-    }).join('');
-
-    list.querySelectorAll('.history-item').forEach(item=>{
-      item.querySelector('.history-head').addEventListener('click', ()=>{ item.classList.toggle('open'); });
-    });
+function onRecClick(e){
+  const btn = e.target.closest('[data-act]'); if(!btn) return;
+  const id = btn.closest('.rec').dataset.id;
+  const r = state.recurring.find(x => x.id === id); if(!r) return;
+  if(btn.dataset.act === 'edit'){ startEditRec(id); return; }
+  if(btn.dataset.act === 'toggle'){
+    r.active = !r.active;
+    if(r.active){ let g = 0; while(r.nextDate < today() && g++ < 600) r.nextDate = advance(r); }
+    toast(r.active ? `« ${r.title} » reprend` : `« ${r.title} » en pause`);
+    commit(); return;
   }
-
-  const historySearchEl = document.getElementById('history-search');
-  if(historySearchEl){ historySearchEl.addEventListener('input', renderHistory); }
-
-  /* ---------- Calendrier ---------- */
-  let calDate = new Date(); calDate.setDate(1);
-  let calSelectedDate = null;
-
-  function renderCalendar(){
-    const grid = document.getElementById('cal-grid');
-    const label = document.getElementById('cal-label');
-    if(!grid) return;
-
-    label.textContent = calDate.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
-
-    const year = calDate.getFullYear(), month = calDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const daysInMonth = new Date(year, month+1, 0).getDate();
-    let startWeekday = firstDay.getDay(); // 0=dimanche
-    startWeekday = (startWeekday + 6) % 7; // lundi = 0
-
-    // Résultat net (gain - perte uniquement, hors retrait/engagé) par date
-    const dailyNet = {};
-    entries.forEach(e=>{
-      const kind = e.type || (e.amount>=0?'gain':'perte');
-      if(kind !== 'gain' && kind !== 'perte') return;
-      dailyNet[e.date] = (dailyNet[e.date] || 0) + e.amount;
-    });
-
-    const todayStr = new Date().toISOString().slice(0,10);
-    const weekdays = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-    let html = weekdays.map(w=>`<div class="cal-weekday">${w}</div>`).join('');
-    for(let i=0;i<startWeekday;i++){ html += `<div class="cal-day empty"></div>`; }
-    for(let d=1; d<=daysInMonth; d++){
-      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const net = dailyNet[dateStr];
-      const cls = net === undefined ? '' : (net >= 0 ? 'pos' : 'neg');
-      const todayCls = dateStr === todayStr ? 'today' : '';
-      const selCls = dateStr === calSelectedDate ? 'selected' : '';
-      const amtLabel = net === undefined ? '' : (net>=0?'+':'\u2212') + Math.abs(net).toLocaleString('fr-FR',{maximumFractionDigits:0});
-      html += `<div class="cal-day ${cls} ${todayCls} ${selCls}" data-date="${dateStr}"><span class="d-num">${d}</span><span class="d-amt">${amtLabel}</span></div>`;
-    }
-    grid.innerHTML = html;
-
-    grid.querySelectorAll('.cal-day:not(.empty)').forEach(cell=>{
-      cell.addEventListener('click', ()=>{
-        calSelectedDate = cell.dataset.date === calSelectedDate ? null : cell.dataset.date;
-        renderCalendar();
-        renderCalendarDetail();
-      });
-    });
-
-    renderCalendarDetail();
+  if(btn.dataset.act === 'del'){
+    if(!confirm(`Supprimer « ${r.title} » ? Les opérations déjà enregistrées sont conservées.`)) return;
+    state.recurring = state.recurring.filter(x => x.id !== id);
+    if(editingRec === id) resetRecForm();
+    commit(); toast('Supprimé');
   }
+}
+$('rec-in-list').addEventListener('click', onRecClick);
+$('rec-out-list').addEventListener('click', onRecClick);
 
-  function renderCalendarDetail(){
-    const detail = document.getElementById('cal-detail');
-    if(!detail) return;
-    if(!calSelectedDate){ detail.style.display = 'none'; return; }
+/* ================= À venir ================= */
+let horizon = 30;
+initSeg('hz-seg', v => { horizon = parseInt(v, 10); renderUpcoming(); });
+initSeg('pl-kind', v => fillCats($('pl-cat'), v, v === 'in' ? 'rembourse' : 'factures'));
 
-    const dateFmt = new Date(calSelectedDate+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+$('pl-submit').addEventListener('click', () => {
+  const title = $('pl-title').value.trim();
+  const amount = parseAmount($('pl-amount').value);
+  const date = $('pl-date').value;
+  if(!title){ $('pl-title').focus(); return; }
+  if(!(amount > 0)){ $('pl-amount').focus(); return; }
+  if(!date){ $('pl-date').focus(); return; }
+  state.planned.push({ id:uid(), title, amount, date, kind:$('pl-kind').dataset.value, category:$('pl-cat').value, description:'' });
+  $('pl-title').value = ''; $('pl-amount').value = ''; $('pl-date').value = '';
+  commit(); toast('Ajouté aux prévisions');
+});
 
-    // Tickets résolus ce jour-là (via resolvedDate), et tickets encore en attente créés ce jour-là
-    const resolvedTickets = manualMatches.filter(m => m.resolvedDate === calSelectedDate);
-    const pendingTickets = manualMatches.filter(m => (!m.status || m.status==='pending') && m.createdDate === calSelectedDate);
-    const ticketCards = [...resolvedTickets, ...pendingTickets];
+function renderUpcoming(){
+  const t0 = today(), until = addDays(t0, horizon);
+  const list = upcoming(until);
+  let bal = currentBalance();
+  const toPay = sum(list.filter(o => o.kind === 'out'), o => o.amount);
+  const toGet = sum(list.filter(o => o.kind === 'in'), o => o.amount);
+  $('u-pay').textContent = money(toPay);
+  $('u-get').textContent = money(toGet);
+  const proj = bal + toGet - toPay;
+  $('u-proj').textContent = money(proj);
+  $('u-proj').className = 'value ' + (proj < 0 ? 'neg' : '');
+  $('u-proj-sub').textContent = `au ${fmtDay(until, {day:'numeric', month:'short', year:'numeric'})}`;
 
-    // Mouvements du jour qui ne viennent pas d'un ticket (gain/perte manuels, retraits) — on exclut les "engagé" car déjà représentés par les tickets en attente
-    const plainEntries = entries.filter(e => e.date === calSelectedDate && !e.fromTicketId && e.type !== 'engage');
-
-    if(ticketCards.length === 0 && plainEntries.length === 0){
-      detail.innerHTML = `<div class="cal-detail-title">${dateFmt}</div><div class="empty-state" style="padding:0;">Aucun mouvement ni pari ce jour-là.</div>`;
-      detail.style.display = 'block';
-      return;
-    }
-
-    const ticketCardsHtml = ticketCards.map(m=>{
-      const matchesList = m.matches && m.matches.length ? m.matches : (m.teams ? [m.teams] : []);
-      const isCombo = matchesList.length > 1;
-      const potentialGain = m.mise * m.cote - m.mise;
-      const status = m.status || 'pending';
-      let badge = '';
-      if(status === 'pending') badge = `<span class="status-badge">EN ATTENTE</span>`;
-      else if(status === 'won') badge = `<span class="status-badge live" style="color:var(--gain); border-color:rgba(52,211,153,0.4);">GAGNÉ · +${fmtEUR(potentialGain)}</span>`;
-      else badge = `<span class="status-badge live">PERDU · \u2212${fmtEUR(m.mise)}</span>`;
-      const titleLine = isCombo
-        ? matchesList.map(t=>`<div style="font-size:13.5px;">${escapeHtml(t)}</div>`).join('')
-        : `<div style="font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px;">${escapeHtml(matchesList[0] || '')}</div>`;
-      return `
-        <div class="ledger-entry" data-tid="${m.id}" style="border-bottom:none; margin-bottom:10px;">
-          <div class="match-card" style="cursor:pointer;">
-            <div class="card-head" style="cursor:pointer; flex-direction:column; align-items:stretch; gap:8px;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="competition">${escapeHtml(m.sport).toUpperCase()}${isCombo ? ` · COMBIN\u00c9 (${matchesList.length})` : ''}</span>
-                ${badge}
-              </div>
-              <div>${titleLine}</div>
-              <div class="team-stats-grid">
-                <div class="tsg-item"><span>Cote</span><span class="v">${m.cote.toFixed(2)}</span></div>
-                <div class="tsg-item"><span>Mise</span><span class="v">${fmtEUR(m.mise)}</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="history-desc"><div class="history-desc-inner">${m.note ? escapeHtml(m.note) : 'Aucune description ajoutée pour ce pari.'}</div></div>
-        </div>`;
-    }).join('');
-
-    const plainEntriesHtml = plainEntries.map(e=>{
-      const kind = e.type || (e.amount>=0?'gain':'perte');
-      const cls = kind === 'gain' ? 'gain' : (kind === 'retrait' ? 'retrait' : 'loss');
-      const title = e.note || (kind==='gain'?'Gain':(kind==='perte'?'Perte':'Retrait'));
-      return `
-        <div class="ledger-entry" data-eid="${e.id}">
-          <div class="ledger-item" style="cursor:pointer;">
-            <div class="ledger-dot ${cls}">${kind==='gain'?'\u25b2':(kind==='retrait'?'\u2193':'\u25bc')}</div>
-            <div class="ledger-main"><div class="note">${escapeHtml(title)}</div></div>
-            <div class="ledger-side"><div class="amount ${cls}">${e.amount>=0?'+':'\u2212'}${Math.abs(e.amount).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
-          </div>
-          <div class="history-desc"><div class="history-desc-inner">${e.description ? escapeHtml(e.description) : 'Aucune description ajoutée pour ce mouvement.'}</div></div>
-        </div>`;
-    }).join('');
-
-    detail.innerHTML = `
-      <div class="cal-detail-title">${dateFmt}</div>
-      ${ticketCardsHtml}
-      ${plainEntriesHtml ? `<div class="ledger-list" style="margin-top:${ticketCardsHtml ? '10px' : '0'};">${plainEntriesHtml}</div>` : ''}
-    `;
-    detail.style.display = 'block';
-
-    detail.querySelectorAll('.ledger-entry[data-tid]').forEach(entryEl=>{
-      entryEl.querySelector('.match-card').addEventListener('click', ()=>{ entryEl.classList.toggle('open'); });
-    });
-    detail.querySelectorAll('.ledger-entry[data-eid]').forEach(entryEl=>{
-      entryEl.querySelector('.ledger-item').addEventListener('click', ()=>{ entryEl.classList.toggle('open'); });
-    });
-  }
-
-  document.getElementById('cal-prev').addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()-1); renderCalendar(); });
-  document.getElementById('cal-next').addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()+1); renderCalendar(); });
-
-  document.getElementById('add-entry-btn').addEventListener('click', async ()=>{
-    const dateEl = document.getElementById('entry-date');
-    const typeEl = document.getElementById('entry-type');
-    const amountEl = document.getElementById('entry-amount');
-    const noteEl = document.getElementById('entry-note');
-    const descEl = document.getElementById('entry-description');
-    const date = dateEl.value || new Date().toISOString().slice(0,10);
-    const rawAmount = parseFloat(amountEl.value);
-    if(isNaN(rawAmount) || rawAmount <= 0){ amountEl.focus(); return; }
-    const amount = typeEl.value === 'gain' ? rawAmount : -rawAmount;
-    entries.push({ id: Date.now(), date, amount, type: typeEl.value, note: noteEl.value.trim(), description: descEl.value.trim() });
-    await saveEntries();
-    amountEl.value=''; noteEl.value=''; descEl.value='';
-    renderRegistre();
-  });
-
-  document.getElementById('add-match-row-btn').addEventListener('click', ()=>{
-    const container = document.getElementById('match-teams-list');
-    const row = document.createElement('div');
-    row.className = 'field-row';
-    row.style.gap = '6px';
-    row.innerHTML = `
-      <input type="text" class="match-team-input" placeholder="ex. Real Madrid — Barcelone" style="flex:1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
-      <button type="button" class="danger-ghost small remove-match-row">✕</button>`;
-    container.appendChild(row);
-    row.querySelector('.remove-match-row').addEventListener('click', ()=>{ row.remove(); });
-  });
-
-  document.getElementById('add-match-btn').addEventListener('click', async ()=>{
-    const sport = document.getElementById('match-sport').value;
-    const teamInputs = Array.from(document.querySelectorAll('.match-team-input'));
-    const matches = teamInputs.map(i=>i.value.trim()).filter(v=>v);
-    const coteEl = document.getElementById('match-cote');
-    const miseEl = document.getElementById('match-mise');
-    const noteEl = document.getElementById('match-note');
-    const cote = parseFloat(coteEl.value);
-    const mise = parseFloat(miseEl.value) || 0;
-    if(matches.length === 0){ teamInputs[0].focus(); return; }
-    if(isNaN(cote) || cote <= 1){ coteEl.focus(); return; }
-    const label = matches.length > 1 ? `Combiné (${matches.length} matchs) \u2014 ${matches.join(' + ')}` : matches[0];
-    const pendingEntryId = Date.now();
-    manualMatches.push({ id: Date.now() + 1, sport, matches, cote, mise, note: noteEl.value.trim(), status: 'pending', pendingEntryId, createdDate: new Date().toISOString().slice(0,10) });
-    // La mise se déduit tout de suite du solde/graphique pour montrer l'argent engagé, en attente du résultat.
-    entries.push({ id: pendingEntryId, date: new Date().toISOString().slice(0,10), amount: -mise, type: 'engage', note: `Mise engagée \u2014 ${label}` });
-    await saveManualMatches();
-    await saveEntries();
-    // Réinitialise le formulaire à une seule ligne de match
-    document.getElementById('match-teams-list').innerHTML = `
-      <div class="field-row" style="gap:6px;">
-        <input type="text" class="match-team-input" placeholder="ex. PSG — OM" style="flex:1; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 10px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
-      </div>`;
-    coteEl.value=''; miseEl.value=''; noteEl.value='';
-    renderRegistre();
-  });
-
-  document.getElementById('entry-date').valueAsDate = new Date();
-
-  /* ================= MATCHS DU JOUR ================= */
-  // Remplace cette URL par celle de ton Cloudflare Worker une fois déployé (étape 4-5 du guide).
-  const WORKER_URL = "https://parisportif-api.maxence-sallepierret2.workers.dev";
-
-  const SNAPSHOT_LABEL_STATIC = "Données statiques (exemple) \u2014 connecte ton Worker pour du direct";
-  const SNAPSHOT_LABEL_LIVE = "Données en direct \u2014 actualisées à chaque chargement de page";
-
-  let footballData = [
-    {
-      id: 'ren-olm', competition: 'Ligue 1 \u2014 J4',
-      home: 'Stade Rennais FC', away: 'Olympique de Marseille',
-      status: 'scheduled', kickoffLabel: 'Coup d\u2019envoi 20:45',
-      form: {
-        home: [ { opp: '\u00e0 Angers', score: '2\u20131', result: 'W', date: '6 sept.' } ],
-        away: [
-          { opp: 'vs Paris FC', score: '2\u20133', result: 'L', date: '6 sept.' },
-          { opp: '\u00e0 Monaco', score: '0\u20132', result: 'L', date: '30 ao\u00fbt' }
-        ]
-      },
-      lineupsAvailable: false
-    },
-    {
-      id: 'sev-vcf', competition: 'La Liga \u2014 J3',
-      home: 'Sevilla FC', away: 'Valencia CF',
-      status: 'scheduled', kickoffLabel: 'Coup d\u2019envoi 21:00',
-      form: {
-        home: [ { opp: '\u00e0 Espanyol', score: '1\u20131', result: 'D', date: '6 sept.' } ],
-        away: [ { opp: 'vs Barcelone', score: '0\u20135', result: 'L', date: '6 sept.' } ]
-      },
-      lineupsAvailable: false
-    }
-  ];
-
-  let tennisData = [
-    {
-      id: 'sab-peg', competition: 'US Open \u2014 Simple dames, demi-finale',
-      p1: 'Aryna Sabalenka', p2: 'Jessica Pegula',
-      status: 'live', statusLabel: '2e set en cours', setsLabel: '1er set : 7\u20135',
-      stats: [
-        { label: 'Points gagn\u00e9s', p1: 36, p2: 33 },
-        { label: 'Aces', p1: 4, p2: 2 },
-        { label: 'Doubles fautes', p1: 2, p2: 0 },
-        { label: 'Coups gagnants', p1: 13, p2: 4 },
-        { label: 'Fautes directes', p1: 8, p2: 5 },
-        { label: '1er service (%)', p1: 71, p2: 77 },
-        { label: 'Balles de break gagn\u00e9es', p1: 1, p2: 0 }
-      ]
-    }
-  ];
-
-  function formRow(f){
-    return `<div class="form-row">
-      <div><span class="result-badge ${f.result}">${f.result}</span><span style="color:var(--text-dim);">${escapeHtml(f.opp)}</span></div>
-      <div><span style="font-family:'IBM Plex Mono', monospace;">${f.score}</span> <span style="color:var(--text-faint); font-size:11.5px;">\u00b7 ${f.date}</span></div>
+  if(!list.length){ $('timeline').innerHTML = `<div class="empty">Rien de prévu sur cette période. Ajoute tes abonnements dans « Fixes & abonnements » ou une dépense ponctuelle ci-dessus.</div>`; return; }
+  let html = '', lastMk = '';
+  list.forEach(o => {
+    bal += signed(o);
+    const mk = monthKey(o.date);
+    if(mk !== lastMk){ html += `<div class="tl-month">${monthLabel(mk)}</div>`; lastMk = mk; }
+    const c = cat(o.category);
+    const tag = o.src === 'recurring' ? `<span class="tag">${FREQ[o.freq]}</span>` : (o.overdue ? '<span class="tag late">En retard</span>' : '<span class="tag">Ponctuel</span>');
+    html += `<div class="tl-item ${o.overdue ? 'overdue' : ''}" data-src="${o.src}" data-id="${esc(o.id)}">
+      <div class="tl-date"><span class="d">${parseD(o.date).getDate()}</span><span class="m">${fmtDay(o.date,{month:'short'})}</span></div>
+      ${icon(c)}
+      <div class="tx-main"><div class="tx-title">${esc(o.title || c.label)}</div><div class="tx-meta">${esc(c.label)}${tag}</div></div>
+      <div class="tl-side"><div class="tx-amt ${o.kind}">${money(signed(o),{sign:true})}</div><div class="tl-bal ${bal < 0 ? 'neg' : ''}">solde ${money(bal)}</div></div>
+      ${o.src === 'planned' ? `<div class="tl-actions"><button type="button" class="btn ghost small ok" data-act="done">${o.kind === 'in' ? 'Marquer reçu' : 'Marquer payé'}</button><button type="button" class="btn danger small" data-act="del">Supprimer</button></div>` : ''}
     </div>`;
+  });
+  $('timeline').innerHTML = html;
+}
+
+$('timeline').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if(!btn) return;
+  const item = btn.closest('.tl-item'); if(item.dataset.src !== 'planned') return;
+  const id = item.dataset.id;
+  const idx = state.planned.findIndex(p => p.id === id); if(idx < 0) return;
+  const [p] = state.planned.splice(idx, 1);
+  if(btn.dataset.act === 'done'){
+    const txId = uid();
+    state.transactions.push({ id:txId, createdAt:Date.now(), date:today(), kind:p.kind, amount:p.amount, category:p.category, title:p.title, description:p.description || '', source:{ type:'planned', id:p.id } });
+    commit();
+    toast(p.kind === 'in' ? 'Marqué reçu' : 'Marqué payé', () => { state.transactions = state.transactions.filter(t => t.id !== txId); state.planned.push(p); commit(); });
+  } else {
+    commit();
+    toast('Prévision supprimée', () => { state.planned.push(p); commit(); });
   }
+});
 
-  function renderFootballList(){
-    const el = document.getElementById('football-list');
-    el.innerHTML = footballData.map(m=>{
-      const statusBadge = m.status === 'live' ? `<span class="status-badge live">EN DIRECT</span>` : `<span class="status-badge">\u00c0 VENIR</span>`;
-      return `
-      <div class="match-card" data-id="${m.id}">
-        <div class="card-head">
-          <div>
-            <div class="competition">${escapeHtml(m.competition)}</div>
-            <div class="teams-line"><span class="team-name">${escapeHtml(m.home)}</span><span class="vs">vs</span><span class="team-name">${escapeHtml(m.away)}</span></div>
-          </div>
-          <div class="side-info">${statusBadge}<div class="kickoff">${escapeHtml(m.kickoffLabel)}<span class="chevron">\u25be</span></div></div>
-        </div>
-        <div class="match-detail"><div class="match-detail-inner">
-          <div class="detail-block"><h4>Forme r\u00e9cente \u2014 ${escapeHtml(m.home)}</h4>${m.form.home.map(formRow).join('')}</div>
-          <div class="detail-block"><h4>Forme r\u00e9cente \u2014 ${escapeHtml(m.away)}</h4>${m.form.away.map(formRow).join('')}</div>
-          <div class="detail-block"><h4>Compositions</h4>${m.lineupsAvailable ? '' : '<div class="lineups-empty">Pas encore annonc\u00e9es \u2014 g\u00e9n\u00e9ralement publi\u00e9es environ 1h avant le coup d\u2019envoi.</div>'}</div>
-        </div></div>
-      </div>`;
-    }).join('');
-    wireCardToggles(el);
+/* ================= Calendrier ================= */
+let calDate = new Date(); calDate.setDate(1);
+let calSel = null;
+
+function renderCalendar(){
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  const mk = `${y}-${pad(m+1)}`, first = mk + '-01', t0 = today();
+  $('cal-label').textContent = monthLabel(mk);
+  const net = {};
+  state.transactions.forEach(t => { if(monthKey(t.date) === mk) net[t.date] = (net[t.date] || 0) + signed(t); });
+  const fut = {};
+  const eom = endOfMonth(first);
+  if(eom >= t0) upcoming(eom).forEach(o => { if(monthKey(o.date) === mk && o.date >= t0) fut[o.date] = (fut[o.date] || 0) + signed(o); });
+
+  const ms = monthStats(mk);
+  const futSum = Object.values(fut);
+  $('cal-sum').innerHTML = `<span>Entrées <b style="color:var(--in)">${money(ms.inc)}</b></span><span>Sorties <b style="color:var(--out)">${money(ms.out)}</b></span>` +
+    (futSum.length ? `<span>Prévu <b style="color:var(--warn)">${money(sum(futSum, x => x),{sign:true})}</b></span>` : '');
+
+  const startWd = (new Date(y, m, 1).getDay() + 6) % 7;
+  const nDays = new Date(y, m+1, 0).getDate();
+  let html = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map(w => `<div class="cal-wd">${w}</div>`).join('');
+  for(let i = 0; i < startWd; i++) html += `<div class="cal-day blank"></div>`;
+  for(let d = 1; d <= nDays; d++){
+    const ds = `${mk}-${pad(d)}`;
+    const n = net[ds], f = fut[ds];
+    let cls = '', amt = '';
+    if(n !== undefined){ cls = n >= 0 ? 'pos' : 'neg'; amt = money(n, {sign:true, dec:0}).replace('\u00a0€',''); }
+    else if(f !== undefined){ cls = 'fut'; amt = money(f, {sign:true, dec:0}).replace('\u00a0€',''); }
+    html += `<button type="button" class="cal-day ${cls} ${ds === t0 ? 'today' : ''} ${ds === calSel ? 'sel' : ''}" data-date="${ds}"><span class="dn">${d}</span><span class="da">${amt}</span></button>`;
   }
+  $('cal-grid').innerHTML = html;
+  renderCalDetail();
+}
 
-  function renderTennisList(){
-    const el = document.getElementById('tennis-list');
-    el.innerHTML = tennisData.map(m=>{
-      const statusBadge = m.status === 'live' ? `<span class="status-badge live">EN DIRECT</span>` : `<span class="status-badge">${m.status === 'finished' ? 'TERMIN\u00c9' : '\u00c0 VENIR'}</span>`;
+function renderCalDetail(){
+  const el = $('cal-detail');
+  if(!calSel || monthKey(calSel) !== `${calDate.getFullYear()}-${pad(calDate.getMonth()+1)}`){ el.hidden = true; return; }
+  const txs = state.transactions.filter(t => t.date === calSel);
+  const ups = calSel >= today() ? upcoming(calSel).filter(o => o.date === calSel) : [];
+  let html = `<h3>${fmtDay(calSel, {weekday:'long', day:'numeric', month:'long', year:'numeric'})}</h3>`;
+  if(!txs.length && !ups.length) html += `<div class="empty" style="padding:6px 0;">Rien ce jour-là.</div>`;
+  html += txs.map(t => { const c = cat(t.category); return `<div class="tx"><div class="tx-row" style="cursor:default;">${icon(c)}<div class="tx-main"><div class="tx-title">${esc(t.title || c.label)}</div><div class="tx-meta">${esc(c.label)}${t.description ? ', ' + esc(t.description) : ''}</div></div><div class="tx-amt ${t.kind}">${money(signed(t),{sign:true})}</div></div></div>`; }).join('');
+  html += ups.map(o => { const c = cat(o.category); return `<div class="tx"><div class="tx-row" style="cursor:default;">${icon(c)}<div class="tx-main"><div class="tx-title">${esc(o.title || c.label)}</div><div class="tx-meta">Prévu<span class="tag">${o.src === 'recurring' ? FREQ[o.freq] : 'Ponctuel'}</span></div></div><div class="tx-amt ${o.kind}" style="opacity:.75">${money(signed(o),{sign:true})}</div></div></div>`; }).join('');
+  el.innerHTML = html; el.hidden = false;
+}
 
-      let detailHtml = '';
-      if(m.stats){
-        const statsRows = m.stats.map(s=>{
-          const total = s.p1 + s.p2 || 1;
-          const w1 = (s.p1/total*100).toFixed(0);
-          const w2 = (s.p2/total*100).toFixed(0);
-          return `
-            <div class="stat-compare-row">
-              <div class="stat-compare-labels"><span>${s.p1}</span><span class="stat-name">${escapeHtml(s.label)}</span><span>${s.p2}</span></div>
-              <div class="stat-compare-bar"><div class="b1" style="width:${w1}%;"></div><div class="b2" style="width:${w2}%;"></div></div>
-            </div>`;
-        }).join('');
-        detailHtml = `
-          <div class="player-legend">
-            <span><span class="dot" style="background:var(--tennis);"></span>${escapeHtml(m.p1)}</span>
-            <span><span class="dot" style="background:var(--text-faint);"></span>${escapeHtml(m.p2)}</span>
-          </div>
-          <h4>Statistiques du match \u2014 ${escapeHtml(m.statusLabel)}</h4>
-          ${statsRows}`;
-      } else if(m.scoreDetail){
-        const sd = m.scoreDetail;
-        const setsRows = (sd.sets && sd.sets.length && sd.sets[0].length) ? sd.sets[0].map((g,i)=>{
-          const g2 = sd.sets[1] ? sd.sets[1][i] : 0;
-          return `<div class="form-row"><div>Set ${i+1}</div><div style="font-family:'IBM Plex Mono', monospace;">${g}\u2013${g2}</div></div>`;
-        }).join('') : '<div class="lineups-empty">Score pas encore disponible pour ce match.</div>';
-        const rankLine = (sd.ranking1 || sd.ranking2)
-          ? `<div class="form-row"><div>Classement</div><div style="font-family:'IBM Plex Mono', monospace;">${sd.ranking1 ?? '\u2013'} vs ${sd.ranking2 ?? '\u2013'}</div></div>`
-          : '';
-        detailHtml = `
-          <div class="player-legend">
-            <span><span class="dot" style="background:var(--tennis);"></span>${escapeHtml(m.p1)}${sd.country1 ? ' (' + escapeHtml(sd.country1.toUpperCase()) + ')' : ''}</span>
-            <span><span class="dot" style="background:var(--text-faint);"></span>${escapeHtml(m.p2)}${sd.country2 ? ' (' + escapeHtml(sd.country2.toUpperCase()) + ')' : ''}</span>
-          </div>
-          <h4>Score \u2014 ${escapeHtml(sd.surface || '')}</h4>
-          ${setsRows}
-          ${rankLine}
-          <div style="font-size:11.5px; color:var(--text-faint); margin-top:8px;">Statistiques détaillées (aces, coups gagnants...) non disponibles sur le plan gratuit de l'API.</div>`;
-      }
+$('cal-grid').addEventListener('click', e => { const c = e.target.closest('.cal-day[data-date]'); if(!c) return; calSel = c.dataset.date === calSel ? null : c.dataset.date; renderCalendar(); });
+$('cal-prev').addEventListener('click', () => { calDate.setMonth(calDate.getMonth()-1); renderCalendar(); });
+$('cal-next').addEventListener('click', () => { calDate.setMonth(calDate.getMonth()+1); renderCalendar(); });
 
-      return `
-      <div class="match-card" data-id="${m.id}">
-        <div class="card-head">
-          <div>
-            <div class="competition">${escapeHtml(m.competition)}</div>
-            <div class="teams-line"><span class="team-name">${escapeHtml(m.p1)}</span><span class="vs">vs</span><span class="team-name">${escapeHtml(m.p2)}</span></div>
-          </div>
-          <div class="side-info">${statusBadge}<div class="kickoff">${escapeHtml(m.setsLabel || m.statusLabel || '')}<span class="chevron">\u25be</span></div></div>
-        </div>
-        <div class="match-detail"><div class="match-detail-inner">
-          <div class="detail-block">${detailHtml}</div>
-        </div></div>
-      </div>`;
-    }).join('');
-    wireCardToggles(el);
-  }
+/* ================= Réglages ================= */
+function renderSettings(){
+  $('s-balance').value = state.settings.startBalance === null || state.settings.startBalance === undefined ? '' : String(state.settings.startBalance).replace('.', ',');
+  $('s-date').value = state.settings.startDate || '';
+  $('s-url').value = syncCfg.url || '';
+  $('s-secret').value = syncCfg.secret || '';
+}
+$('s-save').addEventListener('click', () => {
+  const v = parseAmount($('s-balance').value);
+  if(isNaN(v)){ $('s-balance').focus(); return; }
+  state.settings.startBalance = v;
+  state.settings.startDate = $('s-date').value || today();
+  commit(); toast('Point de départ enregistré');
+});
+$('s-sync').addEventListener('click', async () => {
+  syncCfg.url = $('s-url').value.trim();
+  syncCfg.secret = $('s-secret').value;
+  persistSync();
+  const changed = await pullRemote();
+  if(changed){ processRecurring(); persistLocal(); renderAll(); renderSettings(); toast('Données récupérées depuis le serveur'); }
+});
+$('s-export').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `mes-comptes-${today()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('s-import').addEventListener('click', () => $('s-file').click());
+$('s-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  try{
+    const obj = JSON.parse(await f.text());
+    if(!obj || obj.schema !== 'finances-v1'){ toast('Ce fichier n\'est pas une sauvegarde de Mes comptes'); return; }
+    if(!confirm('Remplacer toutes tes données actuelles par cette sauvegarde ?')) return;
+    state = normalize(obj); commit(); renderSettings(); toast('Sauvegarde restaurée');
+  }catch(err){ toast('Impossible de lire ce fichier'); }
+});
+$('s-reset').addEventListener('click', () => {
+  if(!confirm('Effacer toutes tes opérations, abonnements et prévisions ? Pense à télécharger une sauvegarde avant.')) return;
+  state = emptyState(); commit(); renderSettings(); showTab('apercu'); toast('Toutes les données ont été effacées');
+});
 
-  function wireCardToggles(container){
-    container.querySelectorAll('.match-card').forEach(card=>{
-      card.querySelector('.card-head').addEventListener('click', ()=>{ card.classList.toggle('open'); });
-    });
-  }
+/* ================= Rendu global & démarrage ================= */
+function renderAll(){
+  $('today-label').textContent = cap(new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'}));
+  renderDashboard();
+  renderTx();
+  renderRec();
+  renderUpcoming();
+  renderCalendar();
+}
 
-  /* ---- Récupération en direct via le Worker (si configuré) ---- */
-  async function tryLiveFetch(){
-    const noteEl = document.getElementById('snapshot-note');
-    if(!WORKER_URL){
-      noteEl.textContent = SNAPSHOT_LABEL_STATIC;
-      renderFootballList();
-      renderTennisList();
-      return;
-    }
-    noteEl.textContent = "Chargement des matchs en direct...";
-    try{
-      const [footballRes, tennisRes] = await Promise.all([
-        fetch(WORKER_URL + '/api/football').then(r=>r.json()),
-        fetch(WORKER_URL + '/api/tennis').then(r=>r.json())
-      ]);
-      if(footballRes && Array.isArray(footballRes.matches)){ mapFootballApiResponse(footballRes.matches); }
-      if(tennisRes && Array.isArray(tennisRes.data)){ mapTennisApiResponse(tennisRes.data); }
-      noteEl.textContent = SNAPSHOT_LABEL_LIVE + ' \u2014 ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      renderFootballList();
-      renderTennisList();
-    }catch(err){
-      console.error('Échec de la récupération en direct, retour aux données statiques.', err);
-      noteEl.textContent = SNAPSHOT_LABEL_STATIC + ' (le direct a échoué \u2014 vérifie ton Worker)';
-      renderFootballList();
-      renderTennisList();
-    }
-  }
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState !== 'visible') return;
+  if(processRecurring() > 0) commit(); else renderAll();
+});
 
-  // football-data.org v4 renvoie { matches: [{ competition:{name}, homeTeam:{name}, awayTeam:{name}, status, utcDate, score:{fullTime:{home,away}} }] }
-  function mapFootballApiResponse(apiMatches){
-    if(apiMatches.length === 0) return; // aucun match aujourd'hui dans les compétitions du plan gratuit : on garde les exemples statiques
-    footballData = apiMatches.slice(0, 8).map(m=>{
-      const isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
-      const isFinished = m.status === 'FINISHED';
-      const kickoff = new Date(m.utcDate).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      let kickoffLabel = 'Coup d\u2019envoi ' + kickoff;
-      if(isFinished){
-        kickoffLabel = 'Termin\u00e9 \u2014 ' + (m.score.fullTime.home ?? '?') + '\u2013' + (m.score.fullTime.away ?? '?');
-      } else if(isLive){
-        kickoffLabel = 'En cours \u2014 ' + (m.score.fullTime.home ?? 0) + '\u2013' + (m.score.fullTime.away ?? 0);
-      }
-      return {
-        id: 'api-' + m.id,
-        competition: m.competition ? m.competition.name : '',
-        home: m.homeTeam.name, away: m.awayTeam.name,
-        status: isLive ? 'live' : 'scheduled',
-        kickoffLabel,
-        form: { home: [], away: [] },
-        lineupsAvailable: false
-      };
-    });
-  }
-
-  // livetennisapi renvoie { data: [{ id, tournament, round, status, surface, tour,
-  //   players:{p1:{name,country,ranking},p2:{...}}, score:{sets:[p1,p2], games:[[...],[...]], points:[p1,p2], server} }] }
-  function mapTennisApiResponse(apiMatches){
-    if(apiMatches.length === 0) return; // aucun match dispo à cet instant : on garde les exemples statiques
-    // priorité aux tours plus connus (grand_slam/atp/wta) avant challenger/itf, puis aux matchs en direct
-    const tourRank = { grand_slam: 0, atp: 1, wta: 1, challenger: 2, itf: 3 };
-    const sorted = [...apiMatches].sort((a,b)=>{
-      const rankA = tourRank[a.tour] ?? 4, rankB = tourRank[b.tour] ?? 4;
-      if(rankA !== rankB) return rankA - rankB;
-      if(a.status === 'live' && b.status !== 'live') return -1;
-      if(b.status === 'live' && a.status !== 'live') return 1;
-      return 0;
-    });
-    tennisData = sorted.slice(0, 6).map(m=>{
-      const p1 = m.players.p1, p2 = m.players.p2;
-      const sc = m.score || {};
-      const sets = sc.games || [];
-      const setsLabel = sets.length
-        ? sets[0].map((g,i)=> g + '\u2013' + (sets[1] ? sets[1][i] : 0)).join(', ')
-        : '';
-      let statusLabel = m.round || '';
-      if(sc.points && m.status === 'live'){
-        statusLabel = 'En cours \u2014 ' + sc.points[0] + '\u2013' + sc.points[1];
-      }
-      return {
-        id: 'api-' + m.id,
-        competition: (m.tournament || '') + (m.round ? ' \u2014 ' + m.round : ''),
-        p1: p1.name, p2: p2.name,
-        status: m.status === 'live' ? 'live' : (m.status === 'upcoming' || m.status === 'scheduled' ? 'scheduled' : 'finished'),
-        statusLabel,
-        setsLabel,
-        scoreDetail: {
-          sets: sets, server: sc.server, surface: m.surface,
-          ranking1: p1.ranking, ranking2: p2.ranking, country1: p1.country, country2: p2.country
-        }
-      };
-    });
-  }
-
-  tryLiveFetch();
-  loadAll();
+loadLocal();
+resetTxForm(); resetRecForm();
+fillCats($('pl-cat'), 'out', 'factures');
+if(processRecurring() > 0){ state.updatedAt = Date.now(); persistLocal(); }
+renderSettings();
+renderAll();
+try{ const t = localStorage.getItem(LS_TAB); if(t && $('view-' + t)) showTab(t); }catch(e){}
+pullRemote().then(changed => { if(changed){ processRecurring(); persistLocal(); renderAll(); renderSettings(); } });
 })();
 </script>
 </body>
