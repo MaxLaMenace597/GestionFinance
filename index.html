@@ -245,10 +245,32 @@
   .toast.show{ opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
   .toast button{ background:none; border:none; color: var(--accent); font-weight: 600; padding: 0; }
 
+  /* ---------- Écran de connexion ---------- */
+  .login{ position: fixed; inset: 0; z-index: 50; background: var(--bg); display:flex; align-items:center; justify-content:center; padding: 24px; padding-top: calc(24px + env(safe-area-inset-top, 0px)); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .login-card{ width: 100%; max-width: 360px; display:flex; flex-direction: column; gap: 14px; }
+  .login-card h1{ font-family: var(--display); font-size: 30px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+  .login-card .note{ margin: 0; }
+  .login-err{ color: var(--out); font-size: 13px; min-height: 18px; }
+  .login-card .btn{ width: 100%; padding: 12px; font-size: 14.5px; }
+  .login-card .btn:disabled{ opacity: .6; cursor: wait; }
+  .login-card .link-btn{ align-self: center; color: var(--text-faint); }
+  .login-card .link-btn:hover{ color: var(--text-dim); }
+
   footer{ text-align:center; color: var(--text-faint); font-size: 12px; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--border); }
 </style>
 </head>
 <body>
+<div class="login" id="login" hidden>
+  <div class="login-card">
+    <h1>Mes comptes</h1>
+    <p class="note">Entre ton mot de passe pour retrouver tes comptes sur cet appareil. Tu ne le taperas qu'une fois.</p>
+    <div class="field"><label for="lg-secret">Mot de passe</label><input id="lg-secret" type="password" autocomplete="current-password"></div>
+    <div class="login-err" id="lg-err" role="alert"></div>
+    <button class="btn" id="lg-submit" type="button">Se connecter</button>
+    <button class="link-btn" id="lg-skip" type="button">Utiliser sans synchronisation</button>
+  </div>
+</div>
+
 <div class="wrap">
 
   <header class="masthead">
@@ -483,6 +505,9 @@
           <div class="field" style="max-width:220px;"><label for="s-secret">Mot de passe (APP_SECRET)</label><input id="s-secret" type="password" autocomplete="off"></div>
           <button class="btn" id="s-sync" type="button">Connecter</button>
         </div>
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn danger small" id="s-logout" type="button">Se déconnecter de cet appareil</button>
+        </div>
         <div class="set-status" id="s-status"></div>
       </div>
     </section>
@@ -603,13 +628,14 @@ function setSync(s, detail){
   st.textContent = detail || { off:'Synchronisation désactivée : renseigne l\'adresse et le mot de passe.', pending:'Synchronisation en cours…', ok:'Connecté, tes données sont synchronisées.', err:'La synchronisation a échoué.' }[s];
 }
 async function pushRemote(){
-  if(!syncCfg.url || !syncCfg.secret){ setSync('off'); return; }
+  if(!syncCfg.url || !syncCfg.secret){ setSync('off'); return false; }
   setSync('pending');
   try{
     const r = await fetch(apiUrl(), { method:'POST', headers:{ 'Content-Type':'application/json', 'X-App-Secret':syncCfg.secret }, body: JSON.stringify(state) });
-    if(r.ok) setSync('ok');
-    else setSync('err', r.status === 401 || r.status === 403 ? 'Mot de passe refusé par le Worker.' : `Le Worker a répondu ${r.status}.`);
-  }catch(e){ setSync('err', 'Worker injoignable. Tes données restent enregistrées sur cet appareil.'); }
+    if(r.ok){ setSync('ok'); return true; }
+    setSync('err', r.status === 401 || r.status === 403 ? 'Mot de passe refusé par le Worker.' : `Le Worker a répondu ${r.status}.`);
+    return false;
+  }catch(e){ setSync('err', 'Worker injoignable. Tes données restent enregistrées sur cet appareil.'); return false; }
 }
 async function pullRemote(){
   if(!syncCfg.url || !syncCfg.secret){ setSync('off'); return false; }
@@ -1359,6 +1385,57 @@ document.addEventListener('visibilitychange', () => {
   if(processRecurring() > 0) commit(); else renderAll();
 });
 
+/* ================= Connexion ================= */
+const LS_NOLOGIN = 'finances:nologin';
+const showLogin = () => { $('login').hidden = false; $('lg-err').textContent = ''; $('lg-secret').value = ''; setTimeout(() => $('lg-secret').focus(), 50); };
+const hideLogin = () => { $('login').hidden = true; };
+
+async function doLogin(){
+  const secret = $('lg-secret').value;
+  const err = $('lg-err'), btn = $('lg-submit');
+  if(!secret){ $('lg-secret').focus(); return; }
+  if(!syncCfg.url) syncCfg.url = DEFAULT_WORKER;
+  btn.disabled = true; btn.textContent = 'Connexion…'; err.textContent = '';
+  try{
+    const r = await fetch(apiUrl(), { headers:{ 'X-App-Secret':secret } });
+    if(r.status === 401 || r.status === 403){ err.textContent = 'Mot de passe incorrect.'; return; }
+    if(!r.ok){ err.textContent = `Le serveur a répondu ${r.status}. Vérifie la configuration du Worker.`; return; }
+    const remote = await r.json().catch(() => null);
+    syncCfg.secret = secret; persistSync();
+    try{ localStorage.removeItem(LS_NOLOGIN); }catch(e){}
+    if(remote && remote.schema === 'finances-v1' && (remote.updatedAt||0) >= (state.updatedAt||0)){
+      state = normalize(remote);
+      if(processRecurring() > 0) state.updatedAt = Date.now();
+      persistLocal();
+    } else if(state.updatedAt){
+      pushRemote();
+    }
+    setSync('ok');
+    hideLogin(); renderSettings(); renderAll();
+  }catch(e){
+    err.textContent = 'Impossible de joindre le serveur. Vérifie ta connexion.';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Se connecter';
+  }
+}
+$('lg-submit').addEventListener('click', doLogin);
+$('lg-secret').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+$('lg-skip').addEventListener('click', () => { try{ localStorage.setItem(LS_NOLOGIN, '1'); }catch(e){} hideLogin(); setSync('off'); });
+
+$('s-logout').addEventListener('click', async () => {
+  if(syncCfg.secret){
+    const ok = await pushRemote();
+    if(!ok && !confirm('La dernière synchronisation a échoué : tes dernières modifications pourraient être perdues. Te déconnecter quand même ?')) return;
+  }
+  if(!confirm('Se déconnecter ? Tes données seront effacées de cet appareil (elles restent sur ton serveur).')) return;
+  syncCfg.secret = ''; persistSync();
+  try{ localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_NOLOGIN); }catch(e){}
+  state = emptyState();
+  renderSettings(); renderAll(); setSync('off'); showTab('apercu');
+  showLogin();
+});
+
+/* ================= Démarrage ================= */
 loadLocal();
 resetTxForm(); resetRecForm();
 fillCats($('pl-cat'), 'out', 'factures');
@@ -1366,7 +1443,14 @@ if(processRecurring() > 0){ state.updatedAt = Date.now(); persistLocal(); }
 renderSettings();
 renderAll();
 try{ const t = localStorage.getItem(LS_TAB); if(t && $('view-' + t)) showTab(t); }catch(e){}
-pullRemote().then(changed => { if(changed){ processRecurring(); persistLocal(); renderAll(); renderSettings(); } });
+
+let skipLogin = false;
+try{ skipLogin = localStorage.getItem(LS_NOLOGIN) === '1'; }catch(e){}
+if(!syncCfg.secret && !skipLogin){
+  showLogin();
+} else {
+  pullRemote().then(changed => { if(changed){ processRecurring(); persistLocal(); renderAll(); renderSettings(); } });
+}
 })();
 </script>
 </body>
