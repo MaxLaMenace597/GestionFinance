@@ -241,7 +241,18 @@ button.row:hover{ background:var(--surface-2); }
    ========================================================= */
 .home{ display:grid; gap:14px; grid-template-columns:minmax(0,1fr); }
 .home-col{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+@media (max-width: 899px){
+  .home-col{ display:contents; }
+  .a-hero{ order:1; } .a-start{ order:2; } .a-next{ order:3; } .a-month{ order:4; } .a-budgets{ order:5; } .a-recent{ order:6; }
+}
 @media (min-width: 900px){ .home{ grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); align-items:start; } }
+.mstats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.mstat{ background:var(--surface-2); border-radius:14px; padding:11px 13px; min-width:0; }
+.mstat .l{ font-size:12.5px; color:var(--text-dim); font-weight:500; }
+.mstat .v{ font-family:var(--display); font-size:21px; font-weight:700; letter-spacing:-.02em; white-space:nowrap; }
+.mstat .s{ font-size:12px; color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mtip{ display:flex; gap:10px; align-items:flex-start; font-size:13.5px; line-height:1.45; margin-top:10px; padding-top:12px; border-top:1px solid var(--border); }
+.mtip .ie{ font-size:16px; }
 .bilan-grid{ display:grid; gap:14px; grid-template-columns:minmax(0,1fr); }
 @media (min-width: 900px){ .bilan-grid{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); } .b-wide{ grid-column:1 / -1; } }
 .week-sum{ font-size:13px; color:var(--text-dim); margin:-4px 0 6px; }
@@ -592,6 +603,10 @@ footer.foot{ text-align:center; color:var(--text-faint); font-size:12.5px; margi
       <div class="home-col">
       <section class="hero a-hero" id="hero"></section>
       <section class="card a-start" id="start-card" hidden></section>
+      <section class="card a-month" id="month-card">
+        <div class="card-head"><h3>Ce mois-ci</h3><button class="link" type="button" data-goto="bilan:mois">Voir le bilan</button></div>
+        <div id="month-body"></div>
+      </section>
       </div>
       <div class="home-col">
       <section class="card a-next">
@@ -1516,6 +1531,7 @@ function renderHome(){
   const t0 = today(), mk = monthKey(t0), dayN = +t0.slice(8), pmk = prevMonthKey(mk);
   renderHero();
   renderStart();
+  renderMonthCard();
 
   // Chiffres du mois
   const ms = monthStats(mk), pm = monthStats(pmk, dayN);
@@ -1677,6 +1693,23 @@ document.addEventListener('click', e => {
       <button class="btn block" type="button" id="inst-ok">Compris</button>
     </div>`, () => { $('inst-ok').onclick = () => { closeSheet(); if(!isInstalled()){ prefs.installSeen = true; savePrefs(); } }; });
 });
+
+function renderMonthCard(){
+  const t0 = today(), mk = monthKey(t0), pmk = prevMonthKey(mk), dayN = +t0.slice(8);
+  const ms = monthStats(mk), pm = monthStats(pmk, dayN);
+  let cmp = 'ce mois-ci';
+  if(pm.out > 0){ const d = Math.round((ms.out - pm.out) / pm.out * 100); cmp = d === 0 ? 'comme le mois dernier' : `<span class="${d > 0 ? 'neg' : 'pos'}">${d > 0 ? '+' : '−'}${Math.abs(d)} %</span> vs le mois dernier`; }
+  const cs = catSpend(mk), rows = Object.entries(cs).sort((a,b) => b[1] - a[1]).slice(0, 3), mx = rows.length ? rows[0][1] : 1;
+  const tip = insights()[0];
+  if(!ms.out && !ms.inc){ $('month-body').innerHTML = `<div class="empty">Rien encore ce mois-ci. Tes dépenses apparaîtront ici.</div>`; return; }
+  $('month-body').innerHTML = `
+    <div class="mstats">
+      <div class="mstat"><div class="l">Dépensé</div><div class="v amt">${smart(ms.out)}</div><div class="s">${cmp}</div></div>
+      <div class="mstat"><div class="l">Rentré</div><div class="v amt pos">${smart(ms.inc)}</div><div class="s">bilan <span class="amt ${ms.inc - ms.out >= 0 ? 'pos' : 'neg'}">${(ms.inc - ms.out > 0.004 ? '+' : '') + smart(ms.inc - ms.out)}</span></div></div>
+    </div>
+    ${rows.map(([id, v]) => { const c = cat(id); return `<div class="cbar"><span class="e">${esc(c.emoji)}</span><span class="n">${esc(c.label)}</span><span class="v amt">${smart(v)}</span><div class="bar"><i style="width:${(v / mx * 100).toFixed(1)}%"></i></div><span class="d faint">${ms.out ? Math.round(v / ms.out * 100) + ' %' : ''}</span></div>`; }).join('')}
+    ${tip ? `<div class="mtip"><span class="ie">${tip.e}</span><span>${tip.t}</span></div>` : ''}`;
+}
 
 function renderHomeBudgets(mk){
   const cs = catSpend(mk);
