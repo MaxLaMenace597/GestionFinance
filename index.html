@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="Mes comptes">
 <title>Mes comptes</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%239d8cff'/%3E%3Cpath d='M18 40h28M18 30h20M18 20h12' stroke='%23140f33' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2104,6 +2106,11 @@ let skipLogin = false;
 try{ skipLogin = localStorage.getItem(LS_NOLOGIN) === '1'; }catch(e){}
 if(!syncCfg.secret && !skipLogin) showLogin();
 else pullRemote().then(c => { if(c){ processRecurring(); persistLocal(); renderAll(); } });
+
+// Installation comme une app (écran d'accueil, hors ligne)
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 })();
 </script>
 </body>
