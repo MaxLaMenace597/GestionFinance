@@ -125,6 +125,9 @@ body.discreet .amt{ filter:blur(7px); user-select:none; -webkit-user-select:none
 .nav-btn{ background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-faint); font-size:11px; font-weight:600; padding:8px 0; }
 .nav-btn svg{ width:23px; height:23px; }
 .nav-btn.active{ color:var(--accent); }
+.nav-btn{ position:relative; }
+.badge{ position:absolute; top:4px; left:calc(50% + 6px); min-width:17px; height:17px; padding:0 5px; border-radius:9px; background:var(--out); color:#fff; font-size:10.5px; font-weight:700; line-height:17px; text-align:center; }
+@media (min-width: 900px){ .badge{ position:static; margin-left:2px; } }
 .nav-add{ justify-self:center; width:54px; height:54px; border-radius:18px; border:none; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; transform:translateY(-10px); box-shadow:0 8px 22px color-mix(in srgb, var(--accent) 40%, transparent); }
 .nav-add svg{ width:26px; height:26px; }
 .nav-add .lbl{ display:none; }
@@ -239,8 +242,8 @@ button.row:hover{ background:var(--surface-2); }
 .home{ display:grid; gap:14px; grid-template-columns:minmax(0,1fr); }
 @media (min-width: 900px){
   .home{ grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); grid-template-areas:
-    "hero next" "kpis next" "chart budgets" "cats insights" "months recent"; }
-  .a-hero{ grid-area:hero; } .a-kpis{ grid-area:kpis; } .a-chart{ grid-area:chart; }
+    "hero next" "start next" "kpis next" "chart budgets" "cats insights" "months recent"; }
+  .a-hero{ grid-area:hero; } .a-start{ grid-area:start; } .a-kpis{ grid-area:kpis; } .a-chart{ grid-area:chart; }
   .a-next{ grid-area:next; } .a-budgets{ grid-area:budgets; } .a-insights{ grid-area:insights; }
   .a-cats{ grid-area:cats; } .a-months{ grid-area:months; } .a-recent{ grid-area:recent; }
 }
@@ -266,8 +269,22 @@ button.row:hover{ background:var(--surface-2); }
 .ticks-legend{ display:flex; justify-content:space-between; font-size:12px; color:var(--on-hero-dim); font-weight:500; }
 .hero-foot{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
 .hero-chip{ background:var(--hero-tick); border-radius:12px; padding:8px 12px; font-size:13px; line-height:1.3; flex:1; min-width:130px; }
-.hero-chip span{ display:block; color:var(--on-hero-dim); font-size:12px; font-weight:500; }
+.hero-chip > span{ display:block; color:var(--on-hero-dim); font-size:12px; font-weight:500; }
 .hero-chip b{ font-family:var(--display); font-size:16px; font-weight:700; letter-spacing:-.01em; }
+.hero-chip.wide{ flex-basis:100%; }
+.btn-chip{ border:none; text-align:left; color:var(--on-hero); font:inherit; cursor:pointer; }
+.btn-chip:hover{ background:color-mix(in srgb, var(--on-hero) 22%, transparent); }
+.btn-chip b::after{ content:' ✎'; font-size:12px; opacity:.7; }
+.hero-how{ display:block; margin:14px auto 0; background:none; border:none; color:var(--on-hero-dim); font-size:13px; font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+.hero-how:hover{ color:var(--on-hero); }
+.hero-link{ background:none; border:none; padding:0; color:inherit; font-weight:700; text-decoration:underline; margin-left:4px; }
+.how{ background:var(--surface-2); border-radius:14px; padding:6px 14px; }
+.how-row{ display:flex; justify-content:space-between; gap:12px; padding:8px 0; font-size:14px; }
+.how-row + .how-row{ border-top:1px solid var(--border); }
+.how-row b{ font-family:var(--display); white-space:nowrap; }
+.how-row.sub{ font-weight:600; }
+.how-row.total{ font-weight:700; color:var(--accent); }
+.how-row.total b{ font-size:17px; }
 .hero-alert{ margin-top:14px; background:var(--on-hero); color:var(--hero); border-radius:12px; padding:10px 13px; font-size:13.5px; font-weight:600; }
 
 .kpis{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
@@ -333,6 +350,14 @@ button.row:hover{ background:var(--surface-2); }
 .mini-btn:hover{ filter:brightness(1.1); }
 
 /* Insights */
+.steps{ display:flex; flex-direction:column; gap:2px; }
+.step{ display:flex; align-items:center; gap:12px; padding:9px 6px; margin:0 -6px; border-radius:12px; border:none; background:none; text-align:left; width:calc(100% + 12px); font-size:14.5px; }
+button.step:hover{ background:var(--surface-2); }
+.step .ck{ width:24px; height:24px; border-radius:50%; border:2px solid var(--border-strong); flex-shrink:0; display:grid; place-items:center; }
+.step.done{ color:var(--text-faint); }
+.step.done .ck{ background:var(--in); border-color:var(--in); }
+.step.done .ck::after{ content:''; width:10px; height:6px; border:2.5px solid #fff; border-top:none; border-right:none; transform:rotate(-45deg) translate(1px,-1px); }
+.step .go{ margin-left:auto; color:var(--accent); font-weight:600; font-size:13px; white-space:nowrap; }
 .ins{ display:flex; gap:12px; padding:9px 0; align-items:flex-start; }
 .ins + .ins{ border-top:1px solid var(--border); }
 .ins .ie{ font-size:18px; width:34px; height:34px; border-radius:11px; background:var(--surface-2); display:grid; place-items:center; flex-shrink:0; }
@@ -462,7 +487,8 @@ button.row:hover{ background:var(--surface-2); }
   max-height:calc(100% - 40px - var(--safe-t)); display:flex; flex-direction:column; transform:translateY(105%); transition:transform .28s cubic-bezier(.2,.8,.2,1); visibility:hidden; }
 .sheet.open{ transform:none; visibility:visible; }
 @media (prefers-reduced-motion: reduce){ .sheet, .backdrop{ transition:none; } }
-.sheet-grip{ width:40px; height:5px; border-radius:3px; background:var(--surface-3); margin:9px auto 0; flex-shrink:0; }
+.sheet-grip{ width:40px; height:5px; border-radius:3px; background:var(--surface-3); margin:0 auto; flex-shrink:0; box-sizing:content-box; padding:9px 30px 4px; background-clip:content-box; touch-action:none; }
+.sheet-head{ touch-action:none; }
 .sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:8px 18px 4px; flex-shrink:0; }
 .sheet-head h2{ font-family:var(--display); font-size:21px; font-weight:700; letter-spacing:-.02em; margin:0; }
 .sheet-body{ padding:10px 18px calc(18px + var(--safe-b)); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
@@ -500,6 +526,10 @@ button.row:hover{ background:var(--surface-2); }
 .login-card .logo svg{ width:30px; height:30px; }
 .login-card h1{ font-family:var(--display); font-size:34px; font-weight:800; letter-spacing:-.04em; margin:6px 0 0; line-height:1; }
 .login-card p{ margin:0; color:var(--text-dim); }
+.pw{ position:relative; }
+.pw input{ padding-right:48px; }
+.pw-eye{ position:absolute; right:4px; top:50%; transform:translateY(-50%); width:40px; height:40px; border:none; background:none; color:var(--text-faint); display:grid; place-items:center; border-radius:10px; }
+.pw-eye svg{ width:20px; height:20px; }
 .login-err{ color:var(--out); font-size:13.5px; min-height:18px; }
 .login-card .link{ align-self:center; color:var(--text-dim); font-weight:500; }
 
@@ -515,7 +545,7 @@ footer.foot{ text-align:center; color:var(--text-faint); font-size:12.5px; margi
     <h1>Mes comptes</h1>
     <p>Connecte-toi pour retrouver tes comptes sur cet appareil. Tu ne le feras qu'une fois.</p>
     <div class="field"><label for="lg-user">Identifiant</label><input id="lg-user" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ex. maxence"></div>
-    <div class="field"><label for="lg-secret">Mot de passe</label><input id="lg-secret" type="password" autocomplete="current-password"></div>
+    <div class="field"><label for="lg-secret">Mot de passe</label><div class="pw"><input id="lg-secret" type="password" autocomplete="current-password"><button type="button" class="pw-eye" id="lg-eye" aria-label="Afficher le mot de passe"></button></div></div>
     <div class="login-err" id="lg-err" role="alert"></div>
     <button class="btn block" id="lg-submit" type="button">Se connecter</button>
     <button class="link" id="lg-skip" type="button">Utiliser sans synchronisation</button>
@@ -533,7 +563,7 @@ footer.foot{ text-align:center; color:var(--text-faint); font-size:12.5px; margi
       <button class="nav-btn" data-tab="operations" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span>Opérations</span></button>
       <button class="nav-add" id="nav-add" type="button" aria-label="Ajouter une opération"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Ajouter</span></button>
       <button class="nav-btn" data-tab="budgets" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg><span>Budgets</span></button>
-      <button class="nav-btn" data-tab="prevu" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 13v3l2 1.5"/></svg><span>Prévu</span></button>
+      <button class="nav-btn" data-tab="prevu" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 13v3l2 1.5"/></svg><span>Prévu</span><span class="badge" id="late-badge" hidden></span></button>
     </nav>
     <div class="top-actions">
       <button class="ibtn" id="btn-discreet" type="button" title="Masquer les montants" aria-label="Masquer les montants" aria-pressed="false"></button>
@@ -559,6 +589,8 @@ footer.foot{ text-align:center; color:var(--text-faint); font-size:12.5px; margi
 
     <div class="home" id="home" hidden>
       <section class="hero a-hero" id="hero"></section>
+
+      <section class="card a-start" id="start-card" hidden></section>
 
       <section class="kpis a-kpis">
         <div class="kpi"><div class="l">Rentré ce mois</div><div class="v pos amt" id="k-in"></div><div class="s" id="k-in-s"></div></div>
@@ -692,7 +724,7 @@ footer.foot{ text-align:center; color:var(--text-faint); font-size:12.5px; margi
     <div class="btn-row" style="margin-bottom:16px;">
       <button class="btn sm" type="button" data-add="sub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Abonnement ou charge</button>
       <button class="btn soft sm" type="button" data-add="salary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Salaire ou revenu fixe</button>
-      <button class="btn soft sm" type="button" data-add="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Dépense ponctuelle</button>
+      <button class="btn soft sm" type="button" data-add="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Dépense à venir</button>
     </div>
 
     <div class="grid-2c">
@@ -732,8 +764,10 @@ footer.foot{ text-align:center; color:var(--text-faint); font-size:12.5px; margi
 
     <div class="set-h">Solde</div>
     <div class="set-group">
-      <div class="set-row"><div class="t"><b>Recaler mon solde</b><span>Si l'app et ta banque ne sont plus d'accord, entre ici le solde réel affiché par ta banque.</span></div>
-        <button class="btn soft sm" type="button" id="s-adjust">Recaler</button></div>
+      <div class="set-row"><div class="t"><b>Ce que je veux garder</b><span>Le montant que tu veux avoir sur ton compte le jour de ta paie.</span></div>
+        <button class="btn soft sm" type="button" id="s-cushion">Modifier</button></div>
+      <div class="set-row"><div class="t"><b>Corriger mon solde</b><span>Si ta banque n'affiche pas le même montant que l'app, entre ici le vrai solde.</span></div>
+        <button class="btn soft sm" type="button" id="s-adjust">Corriger</button></div>
     </div>
 
     <div class="set-h">Catégories</div>
@@ -919,7 +953,8 @@ function setSync(s, detail){
   $('sync-dot').dataset.s = s;
   const st = $('s-status');
   st.className = 'set-status' + (s === 'err' ? ' err' : s === 'ok' ? ' ok' : '');
-  st.textContent = detail || { off:'Pas de synchronisation : tes données restent sur cet appareil.', pending:'Synchronisation en cours…', ok:'Connecté. Tes données sont synchronisées.', err:'La synchronisation a échoué.' }[s];
+  const hm = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  st.textContent = detail || { off:'Pas de synchronisation : tes données restent sur cet appareil.', pending:'Synchronisation en cours…', ok:`Connecté${syncCfg.user ? ' en tant que ' + syncCfg.user : ''}. Synchronisé à ${hm}.`, err:'La synchronisation a échoué.' }[s];
 }
 const authErr = r => r.status === 401 || r.status === 403 ? 'Identifiant ou mot de passe refusé par le Worker.' : `Le Worker a répondu ${r.status}.`;
 async function pushRemote(){
@@ -1047,9 +1082,20 @@ function cycleInfo(){
   const bal = currentBalance();
   const spentToday = sum(state.transactions.filter(t => t.date === t0 && t.kind === 'out' && !t.source), t => t.amount);
   const available = bal + ins - outs;
-  const perDay = (available + spentToday) / daysLeft;
+  const cushion = Math.max(0, state.settings.cushion || 0);
+  const perDay = (available - cushion + spentToday) / daysLeft;
+  // Rythme de dépenses « libres » (hors prélèvements, prévisions et épargne) sur les 30 derniers jours
+  const free = state.transactions.filter(t => t.kind === 'out' && !t.source && t.category !== 'epargne' && t.date <= t0);
+  let pace = null;
+  if(free.length >= 3){
+    const first = free.reduce((m, t) => t.date < m ? t.date : m, t0);
+    const span = Math.min(30, Math.max(7, diffDays(first, t0) + 1));
+    const from = addDays(t0, -span + 1);
+    pace = sum(free.filter(t => t.date >= from), t => t.amount) / span;
+  }
+  const projection = pace === null ? null : available - pace * (daysLeft - 1) - Math.max(0, pace - spentToday);
   return { payday, hasPay: !!payRec, payTitle: payRec?.title, start, daysLeft, total: Math.max(1, diffDays(start, payday)), elapsed: diffDays(start, t0),
-    outs, ins, nOuts: before.filter(o => o.kind === 'out').length, bal, available, perDay, spentToday, leftToday: perDay - spentToday };
+    outs, ins, nOuts: before.filter(o => o.kind === 'out').length, nIns: before.filter(o => o.kind === 'in').length, bal, available, cushion, perDay, spentToday, leftToday: perDay - spentToday, pace, projection };
 }
 
 /* =========================================================
@@ -1100,7 +1146,9 @@ function openSheet(title, html, mount){
   $('sheet').classList.add('open'); $('backdrop').classList.add('open');
   document.body.classList.add('lock');
   mount && mount($('sheet-body'));
-  setTimeout(() => { const f = $('sheet-body').querySelector('[data-autofocus]'); if(f && matchMedia('(min-width: 700px)').matches) f.focus(); }, 60);
+  $('sheet').style.transform = '';
+  const f = $('sheet-body').querySelector('[data-autofocus]');
+  if(f) try{ f.focus({ preventScroll:true }); }catch(e){}
 }
 function closeSheet(){
   $('sheet').classList.remove('open'); $('backdrop').classList.remove('open');
@@ -1108,6 +1156,18 @@ function closeSheet(){
   if(sheetReturn && sheetReturn.focus) try{ sheetReturn.focus({preventScroll:true}); }catch(e){}
 }
 $('sheet-close').addEventListener('click', closeSheet);
+// Glisser vers le bas pour fermer (téléphone)
+(() => {
+  let y0 = null, dy = 0;
+  const sh = $('sheet');
+  const start = e => { if(matchMedia('(min-width: 700px)').matches) return; y0 = e.touches[0].clientY; dy = 0; sh.style.transition = 'none'; };
+  const move = e => { if(y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); sh.style.transform = `translateY(${dy}px)`; };
+  const end = () => { if(y0 === null) return; y0 = null; sh.style.transition = ''; if(dy > 90) closeSheet(); sh.style.transform = ''; };
+  sh.querySelector('.sheet-grip').addEventListener('touchstart', start, { passive:true });
+  sh.querySelector('.sheet-head').addEventListener('touchstart', start, { passive:true });
+  sh.addEventListener('touchmove', move, { passive:true });
+  sh.addEventListener('touchend', end);
+})();
 $('backdrop').addEventListener('click', closeSheet);
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('sheet').classList.contains('open')) closeSheet(); });
 
@@ -1262,7 +1322,13 @@ function openOpSheet({ mode, id, preset = {} }){
         toast('Ajouté à tes prévisions');
       } else {
         state.transactions.push({ id:uid(), createdAt:Date.now(), ...data, date:d });
-        toast(kind === 'in' ? 'Rentrée ajoutée' : 'Dépense ajoutée');
+        let msg = kind === 'in' ? 'Rentrée ajoutée' : 'Dépense ajoutée';
+        const lim = state.budgets[category];
+        if(kind === 'out' && lim > 0 && monthKey(d) === monthKey(today())){
+          const left = lim - (catSpend(monthKey(d))[category] || 0);
+          msg += left >= 0 ? `. ${cat(category).label} : encore ${smart(left)} ce mois-ci` : `. Budget ${cat(category).label} dépassé de ${smart(-left)}`;
+        }
+        toast(msg);
       }
       closeSheet(); commit();
     });
@@ -1310,59 +1376,119 @@ $('ob-balance').addEventListener('keydown', e => { if(e.key === 'Enter') $('ob-s
 
 function openAdjust(){
   const bal = currentBalance();
-  openSheet('Recaler mon solde', `
+  openSheet('Corriger mon solde', `
     <div class="stack">
       <p class="muted" style="margin:0;">L'app pense que tu as <b class="amt">${money(bal)}</b>. Entre le solde que t'affiche ta banque maintenant : la différence sera corrigée, sans toucher à tes opérations.</p>
       <label class="amount-in"><input id="adj-v" type="text" inputmode="decimal" data-autofocus value="${amtStr(bal)}" aria-label="Solde réel"><span class="cur">€</span></label>
-      <button class="btn block" id="adj-save" type="button">Recaler le solde</button>
+      <button class="btn block" id="adj-save" type="button">Corriger le solde</button>
     </div>`, () => {
       $('adj-save').addEventListener('click', () => {
         const v = parseAmount($('adj-v').value); if(isNaN(v)){ $('adj-v').focus(); return; }
         const prev = { ...state.settings };
         Object.assign(state.settings, { startBalance:v, startDate:today(), anchorAt:Date.now() });
         closeSheet(); commit();
-        toast('Solde recalé', () => { state.settings = prev; commit(); });
+        toast('Solde corrigé', () => { state.settings = prev; commit(); });
       });
     });
 }
 $('s-adjust').addEventListener('click', openAdjust);
+$('s-cushion').addEventListener('click', () => openCushion());
 
 function renderHero(){
   const c = cycleInfo();
   const perDay = Math.floor(Math.max(0, c.perDay));
-  const untilTxt = c.hasPay
-    ? `jusqu'à ta paie du <b>${fmtDay(c.payday, {weekday:'long', day:'numeric', month:'long'})}</b>`
-    : `jusqu'à la <b>fin du mois</b>`;
-  const n = Math.min(c.total, 62);
-  const scale = c.total / n;
+  const payTxt = c.hasPay ? `ta paie du <b>${fmtDay(c.payday, {weekday:'long', day:'numeric', month:'long'})}</b>` : `la <b>fin du mois</b>`;
+  const inTxt = c.daysLeft === 1 ? 'demain' : `dans ${c.daysLeft} jours`;
+  const n = Math.min(c.total, 62), scale = c.total / n;
   let ticks = '';
-  for(let i = 0; i < n; i++){
-    const day = Math.floor(i * scale);
-    const cls = day < c.elapsed ? 'past' : (day === c.elapsed ? 'today' : '');
-    ticks += `<i class="${cls}"></i>`;
-  }
+  for(let i = 0; i < n; i++){ const day = Math.floor(i * scale); ticks += `<i class="${day < c.elapsed ? 'past' : day === c.elapsed ? 'today' : ''}"></i>`; }
   ticks += `<i class="pay" title="Paie"></i>`;
-  const neg = c.available < 0;
+  const short = c.available < 0, eatsCushion = !short && c.available < c.cushion;
+  const payShort = c.hasPay ? `ta paie (${fmtDay(c.payday, {weekday:'short', day:'numeric', month:'short'})}, ${inTxt})` : `la fin du mois (${inTxt})`;
+  const left = c.available - c.cushion;
+  let big, lead, until;
+  if(short){
+    lead = 'Attention, il va te manquer';
+    big = `<span class="num amt">${money(-c.available, {dec:0})}</span>`;
+    until = `avant ${payShort}, même sans rien dépenser d'autre.`;
+  } else if(eatsCushion){
+    lead = 'Objectif raté de';
+    big = `<span class="num amt">${money(-left, {dec:0})}</span>`;
+    until = `Tu veux avoir <b class="amt">${money(c.cushion, {dec:0})}</b> à ${payShort}, mais il ne restera que <b class="amt">${money(c.available, {dec:0})}</b>.`;
+  } else {
+    lead = 'Il te reste à dépenser';
+    big = `<span class="num amt">${money(left, {dec:0})}</span>`;
+    until = c.cushion > 0
+      ? `pour avoir encore <b class="amt">${money(c.cushion, {dec:0})}</b> à ${payShort}. Soit <b class="amt">${money(perDay, {dec:0})}</b> par jour.`
+      : `jusqu'à ${payShort}. Soit <b class="amt">${money(perDay, {dec:0})}</b> par jour.`;
+  }
+  let proj = '';
+  if(c.projection !== null){
+    proj = `<div class="hero-chip wide"><span>À ton rythme actuel (environ <span class="amt">${money(c.pace, {dec:0})}</span> par jour), il te restera le jour de ${c.hasPay ? 'ta paie' : 'fin de mois'}</span><b class="amt">${money(c.projection, {dec:0})}</b></div>`;
+  }
   $('hero').innerHTML = `
     <div class="hero-top">
       <div><div class="hero-bal-l">Solde du compte</div><div class="hero-bal amt">${money(c.bal)}</div></div>
-      <button type="button" class="hero-adjust" id="hero-adjust">Recaler</button>
+      <button type="button" class="hero-adjust" id="hero-adjust" title="Si ta banque affiche un autre montant">Corriger</button>
     </div>
-    <div class="hero-lead">${neg ? 'Attention, il va te manquer' : 'Tu peux dépenser'}</div>
-    <div class="hero-big">${neg
-      ? `<span class="num amt">${money(Math.abs(c.available), {dec:0})}</span>`
-      : `<span class="num amt">${money(perDay, {dec:0})}</span><span class="per">par jour</span>`}</div>
-    <div class="hero-until">${neg ? 'avant ' + untilTxt.replace("jusqu'à ", '') : untilTxt}, ${c.daysLeft === 1 ? 'demain' : `dans ${c.daysLeft} jours`}.</div>
+    <div class="hero-lead">${lead}</div>
+    <div class="hero-big">${big}</div>
+    <div class="hero-until">${until}</div>
     <div class="ticks" aria-hidden="true">${ticks}</div>
-    <div class="ticks-legend"><span>${fmtDay(c.start)}</span><span>Aujourd'hui, jour ${c.elapsed + 1} sur ${c.total}</span><span>${fmtDay(c.payday)}</span></div>
+    <div class="ticks-legend"><span>${fmtDay(c.start)}</span><span>Jour ${c.elapsed + 1} sur ${c.total}</span><span>${c.hasPay ? 'Paie, ' : ''}${fmtDay(c.payday)}</span></div>
     <div class="hero-foot">
-      <div class="hero-chip"><span>Reste aujourd'hui</span><b class="amt">${money(Math.max(0, c.leftToday), {dec:0})}</b></div>
-      <div class="hero-chip"><span>Disponible d'ici là</span><b class="amt">${money(c.available, {dec:0})}</b></div>
-      <div class="hero-chip"><span>${c.nOuts ? `Prélèvements à venir (${c.nOuts})` : 'Prélèvements à venir'}</span><b class="amt">${money(-c.outs, {dec:0})}</b></div>
+      <button type="button" class="hero-chip btn-chip" id="hero-cushion"><span>Je veux garder à ${c.hasPay ? 'la paie' : 'la fin du mois'}</span><b class="amt">${money(c.cushion, {dec:0})}</b></button>
+      <div class="hero-chip"><span>${c.nOuts ? `${plural(c.nOuts, 'prélèvement')} d'ici là` : 'Prélèvements d\'ici là'}</span><b class="amt">${money(-c.outs, {dec:0})}</b></div>
+      ${!short && !eatsCushion ? `<div class="hero-chip"><span>Reste pour aujourd'hui</span><b class="amt">${money(Math.max(0, c.leftToday), {dec:0})}</b></div>` : ''}
+      ${proj}
     </div>
-    ${!c.hasPay ? `<div class="hero-alert">Ajoute ton salaire dans « Prévu » pour que le calcul suive tes vraies dates de paie.</div>` : ''}
-    ${!neg && c.leftToday < 0 ? `<div class="hero-alert">Tu as dépassé ton budget du jour de ${money(-c.leftToday, {dec:0})}. Ça baisse un peu les jours suivants.</div>` : ''}`;
+    ${!c.cushion && !short ? `<div class="hero-alert">Combien veux-tu avoir sur ton compte le jour de ta paie ? <button type="button" class="hero-link" id="hero-set-goal">Choisir un montant</button></div>` : ''}
+    ${!c.hasPay ? `<div class="hero-alert">Ajoute ton salaire dans « Prévu » : le calcul suivra tes vraies dates de paie. <button type="button" class="hero-link" data-add="salary">Ajouter mon salaire</button></div>` : ''}
+    ${!short && !eatsCushion && c.leftToday < 0 ? `<div class="hero-alert">Tu as dépassé ta limite du jour de <span class="amt">${money(-c.leftToday, {dec:0})}</span>. Pas grave : la limite des jours suivants baisse un peu pour compenser.</div>` : ''}
+    <button type="button" class="hero-how" id="hero-how">Comment c'est calculé ?</button>`;
+  if($('hero-set-goal')) $('hero-set-goal').onclick = openCushion;
   $('hero-adjust').onclick = openAdjust;
+  $('hero-cushion').onclick = openCushion;
+  $('hero-how').onclick = () => openHow(c);
+}
+
+function openCushion(){
+  const cur = state.settings.cushion || 0;
+  openSheet(`Ce que je veux garder`, `
+    <div class="stack">
+      <p class="muted" style="margin:0;">Combien veux-tu avoir sur ton compte le jour de ta paie ? L'app te dira combien il te reste à dépenser d'ici là pour y arriver.</p>
+      <label class="amount-in"><input id="cu-v" type="text" inputmode="decimal" placeholder="0" data-autofocus value="${cur ? amtStr(cur) : ''}" aria-label="Montant voulu le jour de la paie"><span class="cur">€</span></label>
+      <div class="btn-row">${[0, 100, 200, 500].map(v => `<button type="button" class="btn ghost sm" data-cu="${v}">${v ? money(v, {dec:0}) : 'Rien'}</button>`).join('')}</div>
+      <button class="btn block" id="cu-save" type="button">Enregistrer</button>
+    </div>`, body => {
+      body.querySelectorAll('[data-cu]').forEach(b => b.addEventListener('click', () => { $('cu-v').value = b.dataset.cu === '0' ? '' : b.dataset.cu; }));
+      $('cu-v').addEventListener('keydown', e => { if(e.key === 'Enter') $('cu-save').click(); });
+      $('cu-save').addEventListener('click', () => {
+        const v = $('cu-v').value.trim() ? parseAmount($('cu-v').value) : 0;
+        if(isNaN(v) || v < 0){ $('cu-v').focus(); return; }
+        state.settings.cushion = v; closeSheet(); commit();
+        toast(v ? `Objectif : ${money(v, {dec:0})} le jour de ta paie` : 'Objectif retiré');
+      });
+    });
+}
+
+function openHow(c){
+  const line = (l, v, cls='') => `<div class="how-row ${cls}"><span>${l}</span><b class="amt">${v}</b></div>`;
+  openSheet('Comment c\'est calculé', `
+    <div class="stack">
+      <p class="muted" style="margin:0;">Tu choisis combien tu veux avoir le jour de ta paie. L'app calcule ce qu'il te reste à dépenser d'ici là, puis le divise par le nombre de jours pour te donner une limite par jour.</p>
+      <div class="how">
+        ${line('Ton solde aujourd\'hui', money(c.bal))}
+        ${line(`Ce qui doit rentrer d'ici ta paie${c.nIns ? ` (${c.nIns})` : ''}`, money(c.ins, {sign:true}))}
+        ${line(`Prélèvements et dépenses prévues${c.nOuts ? ` (${c.nOuts})` : ''}`, money(-c.outs))}
+        ${line('Ce que tu veux avoir le jour de ta paie', money(-c.cushion))}
+        ${line('Il te reste à dépenser', money(c.available - c.cushion), 'sub')}
+        ${c.spentToday ? line('+ tes dépenses d\'aujourd\'hui (elles comptent dans la limite du jour)', money(c.spentToday, {sign:true})) : ''}
+        ${line(`Divisé par ${plural(c.daysLeft, 'jour')} jusqu'à ${c.hasPay ? 'ta paie' : 'la fin du mois'}`, `${money(Math.floor(Math.max(0, c.perDay)), {dec:0})} par jour`, 'total')}
+      </div>
+      <p class="muted" style="margin:0; font-size:13.5px;">Ta paie est repérée grâce au salaire enregistré dans « Prévu ». Les abonnements et dépenses à venir de « Prévu » sont déjà retirés : tu n'as pas à les compter dans ta limite du jour.</p>
+      <button class="btn block" type="button" id="how-ok">Compris</button>
+    </div>`, () => { $('how-ok').onclick = closeSheet; });
 }
 
 function renderHome(){
@@ -1371,6 +1497,7 @@ function renderHome(){
   if(!has) return;
   const t0 = today(), mk = monthKey(t0), dayN = +t0.slice(8), pmk = prevMonthKey(mk);
   renderHero();
+  renderStart();
 
   // Chiffres du mois
   const ms = monthStats(mk), pm = monthStats(pmk, dayN);
@@ -1441,7 +1568,7 @@ function dueRow(o){
   const late = o.overdue, isToday = o.date === t0;
   const d = parseD(o.date);
   const when = late ? '<span class="tag late">En retard</span>' : (isToday ? 'Aujourd\'hui' : (o.date === addDays(t0,1) ? 'Demain' : cap(fmtDay(o.date, {weekday:'long'}))));
-  return `<div class="due">
+  return `<div class="due" ${o.src === 'planned' ? `data-plan="${esc(o.id)}"` : `data-rec="${esc(o.id)}"`} style="cursor:pointer">
     <div class="datechip ${late ? 'late' : isToday ? 'today' : ''}"><b>${d.getDate()}</b><span>${fmtDay(o.date, {month:'short'}).replace('.', '')}</span></div>
     <div class="row-main"><div class="row-title">${esc(o.title || c.label)}</div><div class="row-meta">${when}${o.src === 'recurring' ? `<span class="tag">${FREQ_S[o.freq]}</span>` : ''}</div></div>
     ${o.src === 'planned' && o.date <= t0 ? `<button class="mini-btn" type="button" data-done="${esc(o.id)}">${o.kind === 'in' ? 'Reçu' : 'Payé'}</button>` : ''}
@@ -1449,7 +1576,7 @@ function dueRow(o){
   </div>`;
 }
 document.addEventListener('click', e => {
-  const d = e.target.closest('[data-done]'); if(d){ markPlannedDone(d.dataset.done); return; }
+  const d = e.target.closest('[data-done]'); if(d){ e.stopImmediatePropagation(); markPlannedDone(d.dataset.done); return; }
   const a = e.target.closest('[data-add]'); if(!a) return;
   const t = a.dataset.add;
   if(t === 'sub') openOpSheet({ mode:'new', preset:{ kind:'out', repeat:'monthly', category:'abonnements' } });
@@ -1484,6 +1611,46 @@ function insights(){
   if(goal) out.push({ e:esc(goal.emoji || '🎯'), t:`Objectif <b>${esc(goal.title)}</b> : ${Math.round(goal.saved / goal.target * 100)} %, encore <b class="amt">${smart(goal.target - goal.saved)}</b> à mettre de côté.` });
   return out.slice(0, 4);
 }
+
+const isInstalled = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function renderStart(){
+  const steps = [
+    { done: state.recurring.some(r => r.kind === 'in'), t:'Ajoute ton salaire', go:'Ajouter', act:'salary' },
+    { done: state.recurring.some(r => r.kind === 'out'), t:'Ajoute tes abonnements et charges fixes', go:'Ajouter', act:'sub' },
+    { done: state.transactions.some(t => t.kind === 'out' && !t.source), t:'Note ta première dépense avec le bouton +', go:'Noter', act:'op' },
+    { done: Object.values(state.budgets).some(v => v > 0), t:'Fixe un budget pour une catégorie', go:'Créer', act:'budget' },
+    { done: isInstalled(), t:'Installe l\'app sur ton téléphone', go:'Comment ?', act:'install' }
+  ];
+  const n = steps.filter(x => x.done).length;
+  const el = $('start-card');
+  if(prefs.startHidden || n === steps.length){ el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = `<div class="card-head"><h3>Pour bien démarrer</h3><span class="aside">${n} sur ${steps.length}</span></div>
+    <div class="bar" style="margin-bottom:8px;"><i class="done" style="width:${n / steps.length * 100}%"></i></div>
+    <div class="steps">${steps.map(x => x.done
+      ? `<div class="step done"><span class="ck"></span>${x.t}</div>`
+      : `<button type="button" class="step" data-step="${x.act}"><span class="ck"></span>${x.t}<span class="go">${x.go}</span></button>`).join('')}</div>
+    <button type="button" class="link" id="start-hide" style="color:var(--text-faint); font-weight:500; margin-top:8px;">Masquer ce guide</button>`;
+  $('start-hide').onclick = () => { prefs.startHidden = true; savePrefs(); renderStart(); };
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-step]'); if(!b) return;
+  const a = b.dataset.step;
+  if(a === 'salary') openOpSheet({ mode:'new', preset:{ kind:'in', repeat:'monthly', category:'salaire' } });
+  if(a === 'sub') openOpSheet({ mode:'new', preset:{ kind:'out', repeat:'monthly', category:'abonnements' } });
+  if(a === 'op') openOpSheet({ mode:'new' });
+  if(a === 'budget') openBudgetSheet();
+  if(a === 'install') openSheet('Installer l\'app', `
+    <div class="stack">
+      <p class="muted" style="margin:0;">L'app s'ouvre alors en plein écran depuis une icône, comme les autres, et marche même sans réseau.</p>
+      <div class="how">
+        <div class="how-row"><span><b style="font-family:var(--body)">iPhone</b> : ouvre ce site dans <b style="font-family:var(--body)">Safari</b>, touche le bouton Partager (carré avec une flèche), puis « Sur l'écran d'accueil ».</span></div>
+        <div class="how-row"><span><b style="font-family:var(--body)">Android</b> : dans Chrome, ouvre le menu ⋮ puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</span></div>
+      </div>
+      <p class="muted" style="margin:0; font-size:13.5px;">Dans l'app installée, tu devras te connecter une fois avec ton identifiant.</p>
+      <button class="btn block" type="button" id="inst-ok">Compris</button>
+    </div>`, () => { $('inst-ok').onclick = () => { closeSheet(); if(!isInstalled()){ prefs.installSeen = true; savePrefs(); } }; });
+});
 
 function renderHomeBudgets(mk){
   const cs = catSpend(mk);
@@ -1711,7 +1878,9 @@ function renderTx(){
   ).sort((a,b) => b.date.localeCompare(a.date) || (b.createdAt||0) - (a.createdAt||0));
 
   const inc = sum(list.filter(t => t.kind === 'in'), t => t.amount), out = sum(list.filter(t => t.kind === 'out'), t => t.amount);
-  $('f-sum').innerHTML = list.length ? `<span>${plural(list.length, 'opération')}</span><span>Rentrées <b class="amt pos">${money(inc)}</b></span><span>Dépenses <b class="amt">${money(out)}</b></span><span>Total <b class="amt">${money(inc - out, {sign:true})}</b></span>` : '';
+  const filtered = !!(q || fk || fc || fm);
+  $('f-sum').innerHTML = (filtered ? `<button type="button" class="link" id="f-clear" style="padding:4px 4px;">Effacer les filtres</button>` : '') + (list.length ? `<span>${plural(list.length, 'opération')}</span><span>Rentrées <b class="amt pos">${money(inc)}</b></span><span>Dépenses <b class="amt">${money(out)}</b></span><span>Total <b class="amt">${money(inc - out, {sign:true})}</b></span>` : '');
+  if($('f-clear')) $('f-clear').onclick = () => { $('f-search').value = ''; $('f-kind').value = ''; $('f-cat').value = ''; $('f-month').value = ''; renderTx(); };
 
   const el = $('tx-list');
   if(!state.transactions.length){ el.innerHTML = `<div class="card empty">Aucune opération pour l'instant. Appuie sur + pour ajouter ta première dépense.</div>`; return; }
@@ -2063,6 +2232,8 @@ async function doLogin(){
   finally{ btn.disabled = false; btn.textContent = 'Se connecter'; }
 }
 $('lg-submit').addEventListener('click', doLogin);
+$('lg-eye').innerHTML = ICON.eye;
+$('lg-eye').addEventListener('click', () => { const i = $('lg-secret'), show = i.type === 'password'; i.type = show ? 'text' : 'password'; $('lg-eye').innerHTML = show ? ICON.eyeOff : ICON.eye; $('lg-eye').setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'); });
 $('lg-secret').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
 $('lg-user').addEventListener('keydown', e => { if(e.key === 'Enter') $('lg-secret').focus(); });
 $('lg-skip').addEventListener('click', () => { try{ localStorage.setItem(LS_NOLOGIN, '1'); }catch(e){} hideLogin(); setSync('off'); });
@@ -2082,6 +2253,8 @@ function renderAll(){
   const h = now.getHours();
   const who = syncCfg.secret && syncCfg.user ? ' ' + cap(syncCfg.user) : '';
   $('today-label').textContent = `${h < 5 || h >= 18 ? 'Bonsoir' : 'Bonjour'}${who}, ${now.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'})}`;
+  const late = state.planned.filter(p => p.date < today()).length;
+  $('late-badge').hidden = !late; $('late-badge').textContent = late;
   renderHome(); renderTx(); renderCalendar(); renderBudgets(); renderPrevu(); renderSettings();
 }
 let lastDay = today();
