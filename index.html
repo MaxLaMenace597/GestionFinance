@@ -610,7 +610,7 @@ footer.foot{ text-align:center; color:var(--text-faint); font-size:12.5px; margi
       </div>
       <div class="home-col">
       <section class="card a-next">
-        <div class="card-head"><h3>Cette semaine</h3><button class="link" type="button" data-goto="prevu">Tout voir</button></div>
+        <div class="card-head"><h3 id="next-title">Cette semaine</h3><button class="link" type="button" data-goto="prevu">Tout voir</button></div>
         <div id="next-list"></div>
       </section>
       <section class="card a-budgets" id="home-budgets-card" hidden>
@@ -1524,6 +1524,8 @@ function openHow(c){
     </div>`, () => { $('how-ok').onclick = closeSheet; });
 }
 
+const isWide = () => matchMedia('(min-width: 900px)').matches;
+matchMedia('(min-width: 900px)').addEventListener?.('change', () => renderHome());
 function renderHome(){
   const has = state.settings.startBalance !== null && state.settings.startBalance !== undefined;
   $('onboard').hidden = has; $('home').hidden = !has;
@@ -1550,16 +1552,20 @@ function renderHome(){
   $('k-due-s').textContent = upM.filter(o => o.kind === 'out').length ? `${plural(upM.filter(o => o.kind === 'out').length, 'échéance')} d'ici la fin du mois` : 'rien d\'ici la fin du mois';
 
   // À venir
-  const week = upcoming(addDays(t0, 6));
+  // Grand écran : 30 jours et plus de lignes. Téléphone : la semaine, en compact.
+  const wide = isWide();
+  const span = wide ? 30 : 7, maxN = wide ? 7 : 4;
+  $('next-title').textContent = wide ? 'À venir' : 'Cette semaine';
+  const week = upcoming(addDays(t0, span - 1));
   const wOut = sum(week.filter(o => o.kind === 'out'), o => o.amount), wIn = sum(week.filter(o => o.kind === 'in'), o => o.amount);
   if(week.length){
-    $('next-list').innerHTML = `<div class="week-sum">${wOut ? `<span class="amt">${money(-wOut, {dec:0})}</span> à payer` : ''}${wOut && wIn ? ', ' : ''}${wIn ? `<span class="amt pos">${money(wIn, {sign:true, dec:0})}</span> à recevoir` : ''} d'ici 7 jours</div>`
-      + week.slice(0, 4).map(dueRow).join('')
-      + (week.length > 4 ? `<div class="week-more">et ${plural(week.length - 4, 'autre échéance', 'autres échéances')} cette semaine</div>` : '');
+    $('next-list').innerHTML = `<div class="week-sum">${wOut ? `<span class="amt">${money(-wOut, {dec:0})}</span> à payer` : ''}${wOut && wIn ? ', ' : ''}${wIn ? `<span class="amt pos">${money(wIn, {sign:true, dec:0})}</span> à recevoir` : ''} d'ici ${span} jours</div>`
+      + week.slice(0, maxN).map(dueRow).join('')
+      + (week.length > maxN ? `<div class="week-more">et ${plural(week.length - maxN, 'autre échéance', 'autres échéances')} ${wide ? 'ce mois-ci' : 'cette semaine'}</div>` : '');
   } else {
-    const nx = upcoming(addDays(t0, 60))[0];
-    $('next-list').innerHTML = nx ? `<div class="empty">Rien à payer cette semaine. Prochaine échéance : <b>${esc(nx.title || cat(nx.category).label)}</b>, le ${fmtDay(nx.date, {day:'numeric', month:'long'})}.</div>`
-      : `<div class="empty">Rien de prévu pour l'instant.<br><button class="btn soft sm" type="button" data-add="sub">Ajouter un abonnement</button></div>`;
+    const nx = upcoming(addDays(t0, 90))[0];
+    $('next-list').innerHTML = nx ? `<div class="empty">Rien à payer ${wide ? 'dans les 30 prochains jours' : 'cette semaine'}. Prochaine échéance : <b>${esc(nx.title || cat(nx.category).label)}</b>, le ${fmtDay(nx.date, {day:'numeric', month:'long'})}.</div>`
+      : `<div class="empty">Rien de prévu pour l'instant. Ajoute ton salaire et tes abonnements : ils apparaîtront ici avant chaque passage.<div class="btn-row" style="margin-top:10px;"><button class="btn soft sm" type="button" data-add="salary">Mon salaire</button><button class="btn soft sm" type="button" data-add="sub">Un abonnement</button></div></div>`;
   }
 
   // Budgets
@@ -1599,8 +1605,8 @@ function renderHome(){
       <div class="mnet amt ${nt >= 0 ? 'pos' : 'neg'}">${(m.inc || m.out) ? money(nt, {sign:true, dec:0}) : ' '}</div></div>`; }).join('');
 
   // Dernières opérations
-  const rec = [...state.transactions].sort((a,b) => b.date.localeCompare(a.date) || (b.createdAt||0) - (a.createdAt||0)).slice(0, 5);
-  $('recent').innerHTML = rec.length ? rec.map(t => txRow(t, true)).join('') : `<div class="empty">Aucune opération pour l'instant. Appuie sur + pour ajouter ta première dépense.</div>`;
+  const rec = [...state.transactions].sort((a,b) => b.date.localeCompare(a.date) || (b.createdAt||0) - (a.createdAt||0)).slice(0, isWide() ? 8 : 5);
+  $('recent').innerHTML = rec.length ? rec.map(t => txRow(t, true)).join('') : `<div class="empty">Aucune opération pour l'instant. Note tes dépenses au fil de l'eau, ça prend 5 secondes.<div style="margin-top:10px;"><button class="btn soft sm" type="button" data-step="op">Ajouter une dépense</button></div></div>`;
 
   renderChart();
 }
